@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graduate Games Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-page:       #f5f4f0;
+      --bg-primary:    #ffffff;
+      --bg-secondary:  #f0ede8;
+      --text-primary:  #1a1a1a;
+      --text-secondary:#6b6b6b;
+      --border:        rgba(0,0,0,0.1);
+      --border-mid:    rgba(0,0,0,0.18);
+      --radius-md:     8px;
+      --radius-lg:     12px;
+      --purple:        #7F77DD;
+      --purple-light:  #CECBF6;
+      --purple-dark:   #534AB7;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-page:      #0f1117;
+        --bg-primary:   #1a1d27;
+        --bg-secondary: #23263a;
+        --text-primary: #f0f2f8;
+        --text-secondary:#8b8fa8;
+        --border:       rgba(255,255,255,0.08);
+        --border-mid:   rgba(255,255,255,0.15);
+        --purple-light: rgba(175,169,236,0.25);
+      }
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    .site-header {
+      background: var(--bg-primary);
+      border-bottom: 0.5px solid var(--border);
+      padding: 18px 32px;
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+    }
+    .site-header h1 { font-size: 18px; font-weight: 500; color: var(--text-primary); }
+    .site-header span { font-size: 13px; color: var(--text-secondary); }
+
+    .dash { max-width: 1100px; margin: 0 auto; padding: 28px 24px 48px; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .kpi {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+    }
+    .kpi-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .kpi-value { font-size: 26px; font-weight: 500; color: var(--text-primary); }
+    .kpi-sub   { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+
+    .filter-status {
+      display: flex; align-items: center; gap: 6px;
+      flex-wrap: wrap; margin-bottom: 16px; min-height: 26px;
+    }
+    .active-tag {
+      font-size: 11px; background: #EEEDFE; color: #3C3489;
+      padding: 3px 10px; border-radius: 20px;
+      display: none; opacity: 0; transition: opacity 0.3s;
+    }
+    .active-tag.visible { display: inline-block; opacity: 1; }
+    .active-tag.mc-tag  { background: #E1F5EE; color: #085041; }
+    .clear-btn {
+      background: transparent; border: 0.5px solid var(--border-mid);
+      color: var(--text-secondary); font-size: 11px;
+      padding: 3px 10px; border-radius: 20px; cursor: pointer;
+      display: none; margin-left: auto; transition: all 0.15s;
+    }
+    .clear-btn:hover { color: var(--text-primary); }
+    .clear-btn.visible { display: block; }
+
+    .row2 { display: grid; grid-template-columns: 3fr 2fr; gap: 14px; margin-bottom: 14px; }
+    @media (max-width: 680px) { .row2 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      margin-bottom: 14px;
+    }
+    .card:last-child { margin-bottom: 0; }
+    .card-title { font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 2px; }
+    .card-sub   { font-size: 11px; color: var(--text-secondary); margin-bottom: 14px; }
+
+    .hint { font-size: 11px; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .hint-icon {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 1.5px solid var(--text-secondary);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 9px; color: var(--text-secondary); flex-shrink: 0;
+    }
+
+    .legend-row { display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; cursor: pointer; padding: 2px 5px; border-radius: 4px; transition: background 0.15s; }
+    .legend-item:hover { background: var(--bg-secondary); }
+    .swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+    .mc-legend { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+    .mc-pill { font-size: 10px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+
+    .game-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+    .game-table th {
+      text-align: left; font-size: 11px; color: var(--text-secondary);
+      font-weight: 500; padding: 6px 10px 10px;
+      border-bottom: 0.5px solid var(--border); cursor: pointer; user-select: none;
+    }
+    .game-table th:hover { color: var(--text-primary); }
+    .game-table td {
+      padding: 9px 10px; border-bottom: 0.5px solid var(--border);
+      color: var(--text-primary); vertical-align: middle;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .game-table tr:last-child td { border-bottom: none; }
+    .game-table tbody tr { transition: background 0.1s; }
+    .game-table tbody tr:hover { background: var(--bg-secondary); }
+
+    .score-badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+    .genre-tag   { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+
+    .mc-link { color: #1D6FA8; text-decoration: none; font-size: 12px; }
+    .mc-link:hover { text-decoration: underline; }
+
+    .must-play-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      background: #0a5c44; color: #7fffd4;
+      font-size: 9px; font-weight: 500; letter-spacing: 0.04em;
+      padding: 2px 6px; border-radius: 3px; text-transform: uppercase;
+      vertical-align: middle; margin-left: 6px; border: 1px solid #1a8c64;
+    }
+
+    .table-hdr {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; margin-bottom: 6px; gap: 10px;
+    }
+    .must-play-key {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--text-secondary); white-space: nowrap;
+      padding-top: 2px;
+    }
+
+    .pagination {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-top: 16px;
+      flex-wrap: wrap; gap: 8px;
+    }
+    .pagination-info { font-size: 11px; color: var(--text-secondary); }
+    .page-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+    .page-btn {
+      background: transparent; border: 0.5px solid var(--border-mid);
+      color: var(--text-secondary); font-size: 11px;
+      padding: 5px 11px; border-radius: 6px; cursor: pointer; transition: all 0.15s;
+    }
+    .page-btn:hover:not(:disabled) { color: var(--text-primary); border-color: var(--border-mid); }
+    .page-btn:disabled { opacity: 0.3; cursor: default; }
+    .page-btn.active { background: var(--purple-dark); border-color: var(--purple-dark); color: #fff; }
+
+    .col-title { width: 30%; }
+    .col-year  { width: 9%; }
+    .col-genre { width: 14%; }
+    .col-score { width: 16%; }
+    .col-link  { width: 22%; }
+
+    .sort-arrow { font-size: 9px; opacity: 0.5; margin-left: 2px; }
+
+    .site-footer {
+      text-align: center; padding: 24px;
+      font-size: 11px; color: var(--text-secondary);
+      border-top: 0.5px solid var(--border);
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <h1>Graduate Games Dashboard</h1>
+  <span>569 games · all cohorts</span>
+</header>
+
+<main class="dash">
+
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Total games</div>
+      <div class="kpi-value" id="kpiGames">—</div>
+      <div class="kpi-sub" id="kpiGamesSub">across all cohorts</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Graduates</div>
+      <div class="kpi-value">312</div>
+      <div class="kpi-sub">contributing developers</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Avg Metacritic</div>
+      <div class="kpi-value" id="kpiRating">—</div>
+      <div class="kpi-sub">out of 100</div>
+    </div>
+  </div>
+
+  <div class="filter-status">
+    <span id="yearTag"  class="active-tag"></span>
+    <span id="genreTag" class="active-tag"></span>
+    <span id="scoreTag" class="active-tag mc-tag"></span>
+    <button class="clear-btn" id="clearBtn" onclick="clearFilters()">Clear all filters</button>
+  </div>
+
+  <div class="row2">
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-title">Games released per year</div>
+      <div class="hint"><span class="hint-icon">i</span> Click a bar to filter by year</div>
+      <div style="position:relative;height:210px;">
+        <canvas id="yearChart" role="img" aria-label="Bar chart of games released per year. Click a bar to filter.">Games by year.</canvas>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-title">Genre breakdown</div>
+      <div class="hint"><span class="hint-icon">i</span> Click a segment to filter by genre</div>
+      <div class="legend-row" id="genreLegend"></div>
+      <div style="position:relative;height:155px;">
+        <canvas id="genreChart" role="img" aria-label="Donut chart of game genres. Click a segment to filter.">Genre distribution.</canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Metacritic score distribution</div>
+    <div class="card-sub" id="histSub">All games · click a bar to filter by score range</div>
+    <div class="mc-legend">
+      <span class="mc-pill" style="background:#1a6b3c;color:#d4f0e0;">Universal acclaim · 90–100</span>
+      <span class="mc-pill" style="background:#1D9E75;color:#E1F5EE;">Generally favourable · 61–89</span>
+      <span class="mc-pill" style="background:#BA7517;color:#FAEEDA;">Mixed or average · 40–60</span>
+      <span class="mc-pill" style="background:#D85A30;color:#FAECE7;">Generally unfavourable · 20–39</span>
+      <span class="mc-pill" style="background:#A32D2D;color:#FCEBEB;">Overwhelming dislike · 0–19</span>
+    </div>
+    <div style="position:relative;height:200px;">
+      <canvas id="histChart" role="img" aria-label="Histogram of Metacritic scores colour coded by review category. Click a bar to filter.">Score distribution 0–100.</canvas>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:0;">
+    <div class="table-hdr">
+      <div>
+        <div class="card-title">All games</div>
+        <div class="card-sub" id="tableSubtitle" style="margin-bottom:0;">Loading…</div>
+      </div>
+      <div class="must-play-key">
+        <span class="must-play-badge"><span>★</span> Must Play</span>= Metacritic 90+
+      </div>
+    </div>
+    <div style="height:14px;"></div>
+    <div style="overflow-x:auto;">
+      <table class="game-table">
+        <thead><tr>
+          <th class="col-title" onclick="setSort('title')">Title <span class="sort-arrow" id="sort-title"></span></th>
+          <th class="col-year"  onclick="setSort('year')">Year <span class="sort-arrow" id="sort-year"></span></th>
+          <th class="col-genre" onclick="setSort('genre')">Genre <span class="sort-arrow" id="sort-genre"></span></th>
+          <th class="col-score" onclick="setSort('score')">Score <span class="sort-arrow" id="sort-score">▼</span></th>
+          <th class="col-link">Metacritic</th>
+        </tr></thead>
+        <tbody id="gameTableBody"></tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <div class="pagination-info" id="pageInfo"></div>
+      <div class="page-btns" id="pageBtns"></div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">Graduate Games Dashboard · data reflects Metacritic scores at time of release</footer>
+
+<script>
+const ALL_GAMES = [
+  { title:"Grand Theft Auto IV", year:2008, genre:"Action", score:98, mustPlay:true },
+  { title:"Grand Theft Auto V", year:2013, genre:"Action", score:97, mustPlay:true },
+  { title:"Red Dead Redemption II", year:2018, genre:"Action", score:97, mustPlay:true },
+  { title:"The Orange Box", year:2007, genre:"Shooter", score:96, mustPlay:true },
+  { title:"LittleBigPlanet", year:2008, genre:"Platformer", score:95, mustPlay:true },
+  { title:"Red Dead Redemption", year:2010, genre:"Action", score:95, mustPlay:true },
+  { title:"God of War", year:2018, genre:"Action", score:94, mustPlay:true },
+  { title:"Banjo-Kazooie", year:2008, genre:"Platformer", score:92, mustPlay:true },
+  { title:"Rock Band", year:2007, genre:"Music", score:92, mustPlay:true },
+  { title:"Forza Horizon 4", year:2018, genre:"Racing", score:92, mustPlay:true },
+  { title:"Forza Horizon 5", year:2021, genre:"Racing", score:92, mustPlay:true },
+  { title:"Battlefield 2", year:2005, genre:"Shooter", score:91, mustPlay:true },
+  { title:"Forza Horizon 3", year:2016, genre:"Racing", score:91, mustPlay:true },
+  { title:"Grand Theft Auto IV: The Lost and Damned", year:2009, genre:"Action", score:90, mustPlay:true },
+  { title:"Empire: Total War", year:2009, genre:"Strategy", score:90, mustPlay:true },
+  { title:"FIFA Soccer 12", year:2011, genre:"Sports", score:89 },
+  { title:"Diablo III: Reaper of Souls - Ultimate Evil Edition", year:2014, genre:"RPG", score:89 },
+  { title:"The Room Three", year:2015, genre:"Puzzle", score:89 },
+  { title:"Burnout: Revenge", year:2005, genre:"Racing", score:89 },
+  { title:"World in Conflict", year:2007, genre:"Strategy", score:89 },
+  { title:"Fable II", year:2008, genre:"RPG", score:89 },
+  { title:"Grand Theft Auto: The Ballad of Gay Tony", year:2009, genre:"Action", score:89 },
+  { title:"WipEout HD: Fury", year:2009, genre:"Racing", score:89 },
+  { title:"The Beatles: Rock Band", year:2009, genre:"Music", score:89 },
+  { title:"L.A. Noire", year:2011, genre:"Action", score:89 },
+  { title:"Tony Hawk's Pro Skater 1 + 2", year:2020, genre:"Sports", score:89 },
+  { title:"Dead Space", year:2008, genre:"Shooter", score:89 },
+  { title:"Alan Wake II", year:2023, genre:"Action", score:89 },
+  { title:"Grand Theft Auto: Episodes from Liberty City", year:2009, genre:"Action", score:88 },
+  { title:"Diddy Kong Racing DS", year:2007, genre:"Racing", score:88 },
+  { title:"Burnout: Paradise", year:2008, genre:"Racing", score:88 },
+  { title:"Burnout: Paradise - The Ultimate Box", year:2009, genre:"Racing", score:88 },
+  { title:"Need for Speed: Hot Pursuit", year:2010, genre:"Racing", score:88 },
+  { title:"Call of Duty: MW3", year:2011, genre:"Shooter", score:88 },
+  { title:"Far Cry 3", year:2012, genre:"Shooter", score:88 },
+  { title:"LittleBigPlanet PSVita", year:2012, genre:"Platformer", score:88 },
+  { title:"Assassin's Creed IV: Black Flag", year:2013, genre:"Action", score:88 },
+  { title:"The Room Two", year:2014, genre:"Puzzle", score:88 },
+  { title:"Hearthstone: Heroes of WarCraft", year:2014, genre:"Strategy", score:88 },
+  { title:"Ori and the Blind Forest", year:2015, genre:"Platformer", score:88 },
+  { title:"Battlefield 1", year:2016, genre:"Shooter", score:88 },
+  { title:"Ori and the Blind Forest: Definitive Edition", year:2016, genre:"Platformer", score:88 },
+  { title:"Critter Crunch", year:2009, genre:"Puzzle", score:87 },
+  { title:"WipEout HD", year:2008, genre:"Racing", score:87 },
+  { title:"DiRT 2", year:2009, genre:"Racing", score:87 },
+  { title:"PixelJunk Shooter", year:2009, genre:"Shooter", score:87 },
+  { title:"Call of Duty: Black Ops", year:2010, genre:"Shooter", score:87 },
+  { title:"DiRT 3", year:2011, genre:"Racing", score:87 },
+  { title:"Velocity: Ultra", year:2014, genre:"Shooter", score:87 },
+  { title:"Forza Motorsport 6: Apex", year:2016, genre:"Racing", score:87 },
+  { title:"Total War: Warhammer II", year:2017, genre:"Strategy", score:87 },
+  { title:"Max Payne 3", year:2012, genre:"Shooter", score:87 },
+  { title:"Need for Speed: Most Wanted U", year:2012, genre:"Racing", score:87 },
+  { title:"DmC: Devil May Cry", year:2013, genre:"Action", score:86 },
+  { title:"Forza Horizon 2", year:2014, genre:"Racing", score:86 },
+  { title:"OlliOlli2: Welcome to Olliwood", year:2015, genre:"Sports", score:86 },
+  { title:"Velocity 2X", year:2014, genre:"Shooter", score:86 },
+  { title:"Plants vs. Zombies: Heroes", year:2016, genre:"Strategy", score:86 },
+  { title:"Clash Royale", year:2016, genre:"Strategy", score:86 },
+  { title:"F1 2017", year:2017, genre:"Racing", score:86 },
+  { title:"Forza Motorsport 7", year:2017, genre:"Racing", score:86 },
+  { title:"The Room: Old Sins", year:2018, genre:"Puzzle", score:86 },
+  { title:"F1 2020", year:2020, genre:"Racing", score:86 },
+  { title:"Cyberpunk 2077", year:2020, genre:"RPG", score:86 },
+  { title:"Destiny 2: The Witch Queen", year:2022, genre:"Shooter", score:86 },
+  { title:"Diablo IV", year:2023, genre:"RPG", score:86 },
+  { title:"Bionic Commando: Rearmed", year:2008, genre:"Platformer", score:85 },
+  { title:"Pure", year:2008, genre:"Racing", score:85 },
+  { title:"Worms Crazy Golf", year:2011, genre:"Sports", score:85 },
+  { title:"Far Cry 4", year:2014, genre:"Shooter", score:85 },
+  { title:"DiRT 4", year:2017, genre:"Racing", score:85 },
+  { title:"Destiny 2", year:2017, genre:"Shooter", score:85 },
+  { title:"Mario + Rabbids: Kingdom Battle", year:2017, genre:"Strategy", score:85 },
+  { title:"Wasteland 3", year:2020, genre:"RPG", score:85 },
+  { title:"Control: Ultimate Edition", year:2020, genre:"Action", score:85 },
+  { title:"Colin McRae Rally 04", year:2004, genre:"Racing", score:84 },
+  { title:"The Movies", year:2005, genre:"Simulation", score:84 },
+  { title:"MotorStorm", year:2006, genre:"Racing", score:84 },
+  { title:"Viva Pi\u00f1ata", year:2006, genre:"Simulation", score:84 },
+  { title:"F1 2011", year:2011, genre:"Racing", score:84 },
+  { title:"Great Little War Game", year:2011, genre:"Strategy", score:84 },
+  { title:"Crysis 2", year:2011, genre:"Shooter", score:84 },
+  { title:"Need for Speed: Most Wanted", year:2012, genre:"Racing", score:84 },
+  { title:"Assassin's Creed III", year:2012, genre:"Action", score:83 },
+  { title:"F1 2012", year:2012, genre:"Racing", score:83 },
+  { title:"FIFA 14", year:2013, genre:"Sports", score:83 },
+  { title:"PixelJunk Monsters: Ultimate HD", year:2013, genre:"Strategy", score:83 },
+  { title:"Frozen Synapse: Prime", year:2014, genre:"Strategy", score:83 },
+  { title:"Rare Replay", year:2015, genre:"Platformer", score:83 },
+  { title:"Planet Coaster", year:2016, genre:"Simulation", score:83 },
+  { title:"FIFA 17", year:2016, genre:"Sports", score:83 },
+  { title:"FIFA 18", year:2017, genre:"Sports", score:83 },
+  { title:"Polybius", year:2017, genre:"Shooter", score:83 },
+  { title:"F1 2018", year:2018, genre:"Racing", score:83 },
+  { title:"Age of Empires II: Definitive Edition", year:2019, genre:"Strategy", score:83 },
+  { title:"Telling Lies", year:2019, genre:"Puzzle", score:83 },
+  { title:"F1 2019 (Anniversary Edition)", year:2019, genre:"Racing", score:83 },
+  { title:"Overcooked!: All You Can Eat", year:2020, genre:"Simulation", score:83 },
+  { title:"F1 2021", year:2021, genre:"Racing", score:83 },
+  { title:"Forza Motorsport", year:2023, genre:"Racing", score:83 },
+  { title:"Blasphemous 2", year:2023, genre:"Action", score:83 },
+  { title:"Football Manager 2024", year:2023, genre:"Sports", score:83 },
+  { title:"Colin McRae Rally 2005 Plus", year:2004, genre:"Racing", score:82 },
+  { title:"DiRT", year:2007, genre:"Racing", score:82 },
+  { title:"Need for Speed: Shift", year:2009, genre:"Racing", score:82 },
+  { title:"Call of Duty: Black Ops II", year:2012, genre:"Shooter", score:82 },
+  { title:"Skylanders: Swap Force", year:2013, genre:"Platformer", score:82 },
+  { title:"DmC: Devil May Cry - Definitive Edition", year:2015, genre:"Action", score:82 },
+  { title:"Assassin's Creed: Odyssey", year:2018, genre:"Action", score:82 },
+  { title:"FIFA 19", year:2018, genre:"Sports", score:82 },
+  { title:"Mortal Kombat 1", year:2023, genre:"Action", score:82 },
+  { title:"Starfield", year:2023, genre:"RPG", score:82 },
+  { title:"Broken Sword: The Sleeping Dragon", year:2003, genre:"Puzzle", score:81 },
+  { title:"FIFA Soccer 08", year:2007, genre:"Sports", score:81 },
+  { title:"TOCA Race Driver 3 Challenge", year:2007, genre:"Racing", score:81 },
+  { title:"Viva Pi\u00f1ata: Pocket Paradise", year:2008, genre:"Simulation", score:81 },
+  { title:"Viva Pi\u00f1ata: Trouble in Paradise", year:2008, genre:"Simulation", score:81 },
+  { title:"MotorStorm: Pacific Rift", year:2008, genre:"Racing", score:81 },
+  { title:"Blur", year:2010, genre:"Racing", score:81 },
+  { title:"Split/Second", year:2010, genre:"Racing", score:81 },
+  { title:"Enslaved: Odyssey to the West", year:2010, genre:"Action", score:81 },
+  { title:"Tom Clancy's Splinter Cell: Blacklist", year:2013, genre:"Shooter", score:81 },
+  { title:"Enslaved: Odyssey to the West - Premium Edition", year:2013, genre:"Action", score:81 },
+  { title:"FIFA 15", year:2014, genre:"Sports", score:81 },
+  { title:"Child of Light", year:2014, genre:"RPG", score:81 },
+  { title:"Geometry Wars 3: Dimensions - Evolved", year:2014, genre:"Shooter", score:81 },
+  { title:"Watch_Dogs 2", year:2016, genre:"Action", score:81 },
+  { title:"F1 2016", year:2016, genre:"Racing", score:81 },
+  { title:"Madden NFL 18", year:2017, genre:"Sports", score:81 },
+  { title:"Burnout: Paradise - Remastered", year:2018, genre:"Racing", score:81 },
+  { title:"Laser League", year:2018, genre:"Sports", score:81 },
+  { title:"Tom Clancy's The Division 2", year:2019, genre:"Shooter", score:81 },
+  { title:"Control", year:2019, genre:"Action", score:81 },
+  { title:"PC Building Simulator 2", year:2022, genre:"Simulation", score:81 },
+  { title:"LEGO Star Wars: The Skywalker Saga", year:2022, genre:"Action", score:81 },
+  { title:"F1 23", year:2023, genre:"Racing", score:81 },
+  { title:"Perfect Dark Zero", year:2005, genre:"Shooter", score:80 },
+  { title:"Rockstar Games presents Table Tennis", year:2006, genre:"Sports", score:80 },
+  { title:"Midnight Club: Los Angeles", year:2008, genre:"Racing", score:80 },
+  { title:"Midnight Club: Los Angeles - Complete Edition", year:2009, genre:"Racing", score:80 },
+  { title:"Vessel", year:2012, genre:"Puzzle", score:80 },
+  { title:"Battlefield 4", year:2013, genre:"Shooter", score:80 },
+  { title:"Call of Duty: Advanced Warfare", year:2014, genre:"Shooter", score:80 },
+  { title:"Danganronpa 2: Goodbye Despair", year:2014, genre:"Puzzle", score:80 },
+  { title:"MLB 14: The Show", year:2014, genre:"Sports", score:80 },
+  { title:"Life Is Strange: Episode 5 - Polarized", year:2015, genre:"Puzzle", score:80 },
+  { title:"Assassin's Creed: Origins", year:2017, genre:"Action", score:80 },
+  { title:"Hellblade: Senua's Sacrifice", year:2017, genre:"Action", score:80 },
+  { title:"Battlefield V", year:2018, genre:"Shooter", score:80 },
+  { title:"Far Cry 5", year:2018, genre:"Shooter", score:80 },
+  { title:"Planet Zoo", year:2019, genre:"Simulation", score:80 },
+  { title:"Immortals: Fenyx Rising", year:2020, genre:"Action", score:80 },
+  { title:"Fall Guys: Ultimate Knockout", year:2020, genre:"Platformer", score:80 },
+  { title:"Age of Empires IV", year:2021, genre:"Strategy", score:80 },
+  { title:"Virtua Tennis 3", year:2007, genre:"Sports", score:79 },
+  { title:"NBA Live 10", year:2009, genre:"Sports", score:79 },
+  { title:"IL-2 Sturmovik: Birds of Prey", year:2009, genre:"Simulation", score:79 },
+  { title:"Fable III", year:2010, genre:"RPG", score:79 },
+  { title:"LEGO The Lord of the Rings", year:2012, genre:"Action", score:79 },
+  { title:"Skylanders Giants", year:2012, genre:"Platformer", score:79 },
+  { title:"Need for Speed: Rivals", year:2013, genre:"Racing", score:79 },
+  { title:"Far Cry 3: Blood Dragon", year:2013, genre:"Shooter", score:79 },
+  { title:"LEGO Marvel Super Heroes", year:2013, genre:"Action", score:79 },
+  { title:"LEGO City: Undercover", year:2013, genre:"Action", score:79 },
+  { title:"Magic: The Gathering - Duels of the Planeswalkers 2013", year:2012, genre:"Strategy", score:79 },
+  { title:"Watch_Dogs", year:2014, genre:"Action", score:79 },
+  { title:"Tales from Deep Space", year:2015, genre:"Action", score:79 },
+  { title:"Danganronpa: Trigger Happy Havoc", year:2014, genre:"Puzzle", score:79 },
+  { title:"Elite: Dangerous", year:2014, genre:"Simulation", score:79 },
+  { title:"Disney Infinity: 3.0 Edition - Starter Pack", year:2015, genre:"Action", score:79 },
+  { title:"LEGO Dimensions", year:2015, genre:"Action", score:79 },
+  { title:"Guitar Hero Live", year:2015, genre:"Music", score:79 },
+  { title:"Tom Clancy's The Division", year:2016, genre:"Shooter", score:79 },
+  { title:"Crash Bandicoot: N. Sane Trilogy", year:2017, genre:"Platformer", score:79 },
+  { title:"Assassin's Creed: Valhalla", year:2020, genre:"Action", score:79 },
+  { title:"Knockout City", year:2021, genre:"Sports", score:79 },
+  { title:"Diablo II: Resurrected", year:2021, genre:"RPG", score:79 },
+  { title:"WRC", year:2022, genre:"Racing", score:79 },
+  { title:"Wildfrost", year:2023, genre:"Strategy", score:79 },
+  { title:"Football Manager 2023", year:2022, genre:"Sports", score:79 },
+  { title:"MLB The Show 24", year:2024, genre:"Sports", score:79 },
+  { title:"Pacific Fighters", year:2004, genre:"Simulation", score:79 },
+  { title:"Perfect Dark", year:2010, genre:"Shooter", score:78 },
+  { title:"Day of Defeat", year:2003, genre:"Shooter", score:78 },
+  { title:"Heavenly Sword", year:2007, genre:"Action", score:78 },
+  { title:"Ellipsis", year:2016, genre:"Puzzle", score:78 },
+  { title:"Banjo-Kazooie: Nuts & Bolts", year:2008, genre:"Platformer", score:77 },
+  { title:"Midnight Club: L.A. Remix", year:2008, genre:"Racing", score:77 },
+  { title:"Worms 2: Armageddon", year:2009, genre:"Strategy", score:77 },
+  { title:"LEGO Harry Potter: Years 1-4", year:2010, genre:"Action", score:77 },
+  { title:"Worms: Reloaded", year:2010, genre:"Strategy", score:77 },
+  { title:"Tom Clancy's Ghost Recon: Future Soldier", year:2012, genre:"Shooter", score:77 },
+  { title:"LEGO Batman 2: DC Super Heroes", year:2012, genre:"Action", score:77 },
+  { title:"Transformers: Fall of Cybertron", year:2012, genre:"Shooter", score:77 },
+  { title:"F1 2013", year:2013, genre:"Racing", score:77 },
+  { title:"Trials Fusion", year:2014, genre:"Sports", score:77 },
+  { title:"Alien: Isolation", year:2014, genre:"Shooter", score:77 },
+  { title:"LittleBigPlanet 3", year:2014, genre:"Platformer", score:77 },
+  { title:"Until Dawn", year:2015, genre:"Action", score:77 },
+  { title:"Fractured Space", year:2016, genre:"Shooter", score:77 },
+  { title:"Skylanders: Imaginators", year:2016, genre:"Platformer", score:77 },
+  { title:"The Metronomicon", year:2016, genre:"Music", score:77 },
+  { title:"Halo Wars 2", year:2017, genre:"Strategy", score:77 },
+  { title:"Trials Rising", year:2019, genre:"Sports", score:77 },
+  { title:"FIFA 20", year:2019, genre:"Sports", score:77 },
+  { title:"Hell Let Loose", year:2021, genre:"Shooter", score:77 },
+  { title:"Sackboy: A Big Adventure", year:2020, genre:"Platformer", score:77 },
+  { title:"Tom Clancy's The Division 2: Warlords of New York", year:2020, genre:"Shooter", score:77 },
+  { title:"Sniper Elite IV Italia", year:2017, genre:"Shooter", score:77 },
+  { title:"Alan Wake: Remastered", year:2021, genre:"Action", score:77 },
+  { title:"F1 Manager 2022", year:2022, genre:"Sports", score:77 },
+  { title:"F1 22", year:2022, genre:"Racing", score:77 },
+  { title:"F1 Manager 2023", year:2023, genre:"Sports", score:77 },
+  { title:"Horizon VR: Call of the Mountain", year:2023, genre:"Action", score:77 },
+  { title:"World Tour Soccer 2003", year:2003, genre:"Sports", score:76 },
+  { title:"MotoGP '07", year:2007, genre:"Racing", score:76 },
+  { title:"Prototype", year:2009, genre:"Action", score:76 },
+  { title:"The House of the Dead: Overkill", year:2009, genre:"Shooter", score:76 },
+  { title:"MotorStorm: RC", year:2012, genre:"Racing", score:76 },
+  { title:"Killzone: Mercenary", year:2013, genre:"Shooter", score:76 },
+  { title:"Call of Duty: Ghosts", year:2013, genre:"Shooter", score:76 },
+  { title:"GRID 2", year:2013, genre:"Racing", score:76 },
+  { title:"Skylanders: Trap Team", year:2014, genre:"Platformer", score:76 },
+  { title:"RIGS: Mechanized Combat League", year:2016, genre:"Shooter", score:76 },
+  { title:"LEGO Star Wars: The Force Awakens", year:2016, genre:"Action", score:76 },
+  { title:"Fortnite", year:2017, genre:"Shooter", score:76 },
+  { title:"For Honor", year:2017, genre:"Action", score:76 },
+  { title:"Vader Immortal: Episode I", year:2020, genre:"Action", score:76 },
+  { title:"Jurassic World: Evolution 2", year:2021, genre:"Simulation", score:76 },
+  { title:"Assassin's Creed: Nexus VR", year:2023, genre:"Action", score:76 },
+  { title:"World Tour Soccer 2002", year:2002, genre:"Sports", score:75 },
+  { title:"Sniper Elite", year:2005, genre:"Shooter", score:75 },
+  { title:"Operation Flashpoint: Dragon Rising", year:2009, genre:"Shooter", score:75 },
+  { title:"Risk: Factions", year:2010, genre:"Strategy", score:75 },
+  { title:"MotorStorm: Apocalypse", year:2011, genre:"Racing", score:75 },
+  { title:"LEGO Harry Potter: Years 5-7", year:2011, genre:"Action", score:75 },
+  { title:"ZombiU", year:2012, genre:"Shooter", score:75 },
+  { title:"Awesomenauts", year:2012, genre:"Action", score:75 },
+  { title:"Mantis Burn Racing", year:2016, genre:"Racing", score:75 },
+  { title:"Call of Duty: Infinite Warfare", year:2016, genre:"Shooter", score:75 },
+  { title:"Sniper Elite 4: Italia", year:2017, genre:"Shooter", score:75 },
+  { title:"Life Is Strange: Before the Storm - Complete Season", year:2017, genre:"Puzzle", score:75 },
+  { title:"11-11: Memories Retold", year:2018, genre:"Puzzle", score:75 },
+  { title:"Riders Republic", year:2021, genre:"Sports", score:75 },
+  { title:"NFS: Unbound", year:2022, genre:"Racing", score:75 },
+  { title:"As Dusk Falls", year:2022, genre:"Puzzle", score:75 },
+  { title:"Just Dance 2023 Edition", year:2022, genre:"Music", score:75 },
+  { title:"Loddlenaut", year:2023, genre:"Simulation", score:75 },
+  { title:"AC/DC Live: Rock Band - Track Pack", year:2008, genre:"Music", score:75 },
+  { title:"SpellForce III", year:2017, genre:"RPG", score:75 },
+  { title:"Life Is Strange: Before the Storm - Remastered", year:2022, genre:"Puzzle", score:75 },
+  { title:"Lemmings", year:2012, genre:"Puzzle", score:74 },
+  { title:"Burnout: Dominator", year:2007, genre:"Racing", score:74 },
+  { title:"The Club", year:2008, genre:"Shooter", score:74 },
+  { title:"Warhammer 40,000: Space Marine", year:2011, genre:"Shooter", score:74 },
+  { title:"Crysis 3", year:2013, genre:"Shooter", score:74 },
+  { title:"Destiny", year:2014, genre:"Shooter", score:74 },
+  { title:"Assassin's Creed: Syndicate", year:2015, genre:"Action", score:74 },
+  { title:"Far Cry: Primal", year:2016, genre:"Action", score:74 },
+  { title:"MotoGP 19", year:2019, genre:"Racing", score:74 },
+  { title:"Watch Dogs: Legion", year:2020, genre:"Action", score:74 },
+  { title:"PGA Tour 2K21", year:2020, genre:"Sports", score:74 },
+  { title:"MotoGP 20", year:2020, genre:"Racing", score:74 },
+  { title:"GRID: Legends", year:2022, genre:"Racing", score:74 },
+  { title:"PGA Tour", year:2023, genre:"Sports", score:74 },
+  { title:"Swords & Soldiers II: Shawarmageddon", year:2018, genre:"Strategy", score:74 },
+  { title:"Battle of Britain II: Wings of Victory", year:2005, genre:"Simulation", score:73 },
+  { title:"Stuntman: Ignition", year:2007, genre:"Racing", score:73 },
+  { title:"Frontlines: Fuel of War", year:2008, genre:"Shooter", score:73 },
+  { title:"Magic: The Gathering - Duels of the Planeswalkers", year:2009, genre:"Strategy", score:73 },
+  { title:"Sonic & SEGA All-Stars Racing", year:2010, genre:"Racing", score:73 },
+  { title:"LEGO Star Wars III: The Clone Wars", year:2011, genre:"Action", score:73 },
+  { title:"DiRT: Showdown", year:2012, genre:"Racing", score:73 },
+  { title:"The Room", year:2012, genre:"Puzzle", score:73 },
+  { title:"Pure Pool", year:2014, genre:"Sports", score:73 },
+  { title:"Swords & Soldiers II", year:2015, genre:"Strategy", score:73 },
+  { title:"Worms: W.M.D.", year:2016, genre:"Strategy", score:73 },
+  { title:"Star Trek: Bridge Crew", year:2017, genre:"Simulation", score:73 },
+  { title:"The Escapists 2", year:2017, genre:"Puzzle", score:73 },
+  { title:"Bomber Crew", year:2017, genre:"Simulation", score:73 },
+  { title:"The Awesome Adventures of Captain Spirit", year:2018, genre:"Puzzle", score:73 },
+  { title:"Onrush", year:2018, genre:"Racing", score:73 },
+  { title:"Shenmue I & II", year:2018, genre:"Action", score:73 },
+  { title:"Sega Genesis Classics", year:2018, genre:"Action", score:73 },
+  { title:"Battlezone: Gold Edition", year:2018, genre:"Shooter", score:73 },
+  { title:"Need for Speed: Hot Pursuit - Remastered", year:2020, genre:"Racing", score:73 },
+  { title:"Spyder", year:2021, genre:"Puzzle", score:73 },
+  { title:"PowerWash Simulator", year:2022, genre:"Simulation", score:73 },
+  { title:"Evil Genius 2 World Domination", year:2021, genre:"Strategy", score:73 },
+  { title:"Call of Duty: MWII - Modern Warfare II", year:2022, genre:"Shooter", score:73 },
+  { title:"Burn, Zombie Burn!", year:2009, genre:"Shooter", score:73 },
+  { title:"Eagle Flight", year:2016, genre:"Simulation", score:73 },
+  { title:"Age of Empires II: Definitive Edition - Return of Rome", year:2023, genre:"Strategy", score:73 },
+  { title:"Droplitz", year:2009, genre:"Puzzle", score:72 },
+  { title:"Prototype 2", year:2012, genre:"Action", score:72 },
+  { title:"Just Cause 3", year:2015, genre:"Action", score:72 },
+  { title:"The Escapists", year:2015, genre:"Puzzle", score:72 },
+  { title:"Shadow Complex: Remastered", year:2015, genre:"Action", score:72 },
+  { title:"Worms 4", year:2015, genre:"Strategy", score:72 },
+  { title:"Starlink: Battle for Atlas", year:2018, genre:"Shooter", score:72 },
+  { title:"Asphalt 9: Legends", year:2018, genre:"Racing", score:72 },
+  { title:"Hotshot Racing", year:2020, genre:"Racing", score:72 },
+  { title:"Just Dance 2020", year:2019, genre:"Music", score:72 },
+  { title:"Lost Words: Beyond the Page", year:2020, genre:"Puzzle", score:72 },
+  { title:"Ride 4", year:2020, genre:"Racing", score:72 },
+  { title:"Headbangers: Rhythm Royale", year:2023, genre:"Music", score:72 },
+  { title:"Dead Nation: Apocalypse Edition", year:2014, genre:"Shooter", score:72 },
+  { title:"Kinect: Disneyland Adventures", year:2011, genre:"Simulation", score:72 },
+  { title:"Rayman Adventures", year:2015, genre:"Platformer", score:72 },
+  { title:"Delta Force: Black Hawk Down", year:2004, genre:"Shooter", score:72 },
+  { title:"Rainbow Skies", year:2018, genre:"RPG", score:72 },
+  { title:"NeuroNet: Mendax Proxy", year:2023, genre:"Puzzle", score:72 },
+  { title:"Banjo-Tooie", year:2009, genre:"Platformer", score:71 },
+  { title:"Primal", year:2003, genre:"Action", score:71 },
+  { title:"Secrets of the Ark: A Broken Sword Game", year:2006, genre:"Puzzle", score:71 },
+  { title:"Jetpac Refuelled", year:2007, genre:"Shooter", score:71 },
+  { title:"Thrillville: Off the Rails", year:2007, genre:"Simulation", score:71 },
+  { title:"New International Track & Field", year:2008, genre:"Sports", score:71 },
+  { title:"Eufloria", year:2011, genre:"Strategy", score:71 },
+  { title:"Kinect Sports", year:2010, genre:"Sports", score:71 },
+  { title:"LEGO Pirates of the Caribbean: The Video Game", year:2011, genre:"Action", score:71 },
+  { title:"Worms Revolution", year:2012, genre:"Strategy", score:71 },
+  { title:"Worms: Clan Wars", year:2013, genre:"Strategy", score:71 },
+  { title:"Killer Instinct", year:2013, genre:"Action", score:71 },
+  { title:"LEGO Batman 3: Beyond Gotham", year:2014, genre:"Action", score:71 },
+  { title:"Battlefield: Hardline", year:2015, genre:"Shooter", score:71 },
+  { title:"Tom Clancy's Rainbow Six: Siege", year:2015, genre:"Shooter", score:71 },
+  { title:"LEGO Marvel Super Heroes 2", year:2017, genre:"Action", score:71 },
+  { title:"Strange Brigade", year:2018, genre:"Shooter", score:71 },
+  { title:"GRID", year:2019, genre:"Racing", score:71 },
+  { title:"Destiny 2: Shadowkeep", year:2019, genre:"Shooter", score:71 },
+  { title:"Sniper Elite III Afrika", year:2014, genre:"Shooter", score:71 },
+  { title:"Sniper Elite V2 Remastered", year:2019, genre:"Shooter", score:71 },
+  { title:"Far Cry 6", year:2021, genre:"Shooter", score:71 },
+  { title:"Call of Duty: Vanguard", year:2021, genre:"Shooter", score:71 },
+  { title:"Outriders", year:2021, genre:"Shooter", score:71 },
+  { title:"Tom Clancy's Rainbow Six: Extraction", year:2022, genre:"Shooter", score:71 },
+  { title:"Dead Island 2", year:2023, genre:"Action", score:71 },
+  { title:"PC Building Simulator", year:2019, genre:"Simulation", score:71 },
+  { title:"Assassin's Creed III: The Tyranny of King Washington - The Redemption", year:2013, genre:"Action", score:71 },
+  { title:"Just Dance 2016", year:2015, genre:"Music", score:71 },
+  { title:"Wonderbook: Book of Spells", year:2012, genre:"Puzzle", score:70 },
+  { title:"LEGO The Hobbit", year:2014, genre:"Action", score:70 },
+  { title:"Assassin's Creed: Rogue", year:2014, genre:"Action", score:70 },
+  { title:"Assassin's Creed: Unity", year:2014, genre:"Action", score:70 },
+  { title:"Anno 2205", year:2015, genre:"Strategy", score:70 },
+  { title:"State of Decay: Year-One Survival Edition", year:2015, genre:"Action", score:70 },
+  { title:"Until Dawn: Rush of Blood", year:2016, genre:"Shooter", score:70 },
+  { title:"Just Dance 2017", year:2016, genre:"Music", score:70 },
+  { title:"NFS: Heat", year:2019, genre:"Racing", score:70 },
+  { title:"Team Sonic Racing", year:2019, genre:"Racing", score:70 },
+  { title:"Just Dance 2022", year:2021, genre:"Music", score:70 },
+  { title:"Zombie Army 4 Dead War", year:2020, genre:"Shooter", score:70 },
+  { title:"The Texas Chain Saw Massacre", year:2023, genre:"Action", score:70 },
+  { title:"Avatar: Frontiers of Pandora", year:2023, genre:"Action", score:70 },
+  { title:"World Tour Soccer", year:2005, genre:"Sports", score:70 },
+  { title:"GTI Club: Rally C\u00f4te d'Azur", year:2009, genre:"Racing", score:70 },
+  { title:"Haunt the House: Terrortown", year:2014, genre:"Strategy", score:70 },
+  { title:"Harry Potter and the Chamber of Secrets", year:2002, genre:"Action", score:69 },
+  { title:"Brian Lara International Cricket 2007", year:2007, genre:"Sports", score:69 },
+  { title:"Ferrari Challenge: Trofeo Pirelli", year:2008, genre:"Racing", score:69 },
+  { title:"LEGO Indiana Jones 2: The Adventure Continues", year:2009, genre:"Action", score:69 },
+  { title:"Nike+ Kinect Training", year:2012, genre:"Sports", score:69 },
+  { title:"Big Sky: Infinity", year:2012, genre:"Shooter", score:69 },
+  { title:"The LEGO Movie Videogame", year:2014, genre:"Action", score:69 },
+  { title:"Driveclub", year:2014, genre:"Racing", score:69 },
+  { title:"Disney Infinity: Edition 2.0 - Marvel Super Heroes", year:2014, genre:"Action", score:69 },
+  { title:"ScreamRide", year:2015, genre:"Simulation", score:69 },
+  { title:"LEGO Marvel Avengers", year:2016, genre:"Action", score:69 },
+  { title:"Steep", year:2016, genre:"Sports", score:69 },
+  { title:"Just Dance 2018", year:2017, genre:"Music", score:69 },
+  { title:"Assassin's Creed: Rogue - Remastered", year:2018, genre:"Action", score:69 },
+  { title:"Ride 3", year:2018, genre:"Racing", score:69 },
+  { title:"Far Cry: New Dawn", year:2019, genre:"Shooter", score:69 },
+  { title:"Grand Theft Auto 2", year:1999, genre:"Action", score:69 },
+  { title:"Kinectimals", year:2010, genre:"Simulation", score:69 },
+  { title:"Hatoful Boyfriend", year:2014, genre:"Puzzle", score:69 },
+  { title:"LMA Manager 2007", year:2006, genre:"Sports", score:67 },
+  { title:"Saints Row", year:2022, genre:"Action", score:68 },
+  { title:"Bionic Commando", year:2009, genre:"Action", score:68 },
+  { title:"Virtua Tennis 2009", year:2009, genre:"Sports", score:68 },
+  { title:"Crackdown 2", year:2010, genre:"Action", score:68 },
+  { title:"MotoGP 09/10", year:2010, genre:"Racing", score:68 },
+  { title:"Homefront", year:2011, genre:"Shooter", score:68 },
+  { title:"Tom Clancy's Ghost Recon: Wildlands", year:2017, genre:"Shooter", score:68 },
+  { title:"MXGP 2020: The Official Motocross Videogame", year:2020, genre:"Racing", score:68 },
+  { title:"Monster Energy Supercross 3: The Official Videogame", year:2020, genre:"Racing", score:68 },
+  { title:"Just Dance 2021", year:2020, genre:"Music", score:68 },
+  { title:"WarCraft Rumble", year:2023, genre:"Strategy", score:68 },
+  { title:"Roller Champions", year:2022, genre:"Sports", score:68 },
+  { title:"Shiftlings", year:2015, genre:"Puzzle", score:68 },
+  { title:"Kinectimals: Now with Bears!", year:2011, genre:"Simulation", score:67 },
+  { title:"Transference", year:2018, genre:"Puzzle", score:67 },
+  { title:"Stacked with Daniel Negreanu", year:2006, genre:"Puzzle", score:67 },
+  { title:"Worms 4: Mayhem", year:2005, genre:"Strategy", score:67 },
+  { title:"F1 2009", year:2009, genre:"Racing", score:67 },
+  { title:"Operation Flashpoint: Red River", year:2011, genre:"Shooter", score:67 },
+  { title:"Mad Max", year:2015, genre:"Action", score:67 },
+  { title:"Mirror's Edge: Catalyst", year:2016, genre:"Action", score:67 },
+  { title:"Jurassic World: Evolution", year:2018, genre:"Simulation", score:67 },
+  { title:"Age of Empires: Definitive Edition", year:2018, genre:"Strategy", score:67 },
+  { title:"Sea of Thieves", year:2018, genre:"Action", score:67 },
+  { title:"Sea of Solitude", year:2019, genre:"Action", score:67 },
+  { title:"West of Dead", year:2020, genre:"Shooter", score:67 },
+  { title:"Thymesia", year:2022, genre:"Action", score:67 },
+  { title:"Q.U.B.E.", year:2012, genre:"Puzzle", score:67 },
+  { title:"Alien Breed 3: Descent", year:2010, genre:"Shooter", score:66 },
+  { title:"MotoGP 10/11", year:2011, genre:"Racing", score:66 },
+  { title:"DmC: Devil May Cry - Vergil's Downfall DLC", year:2013, genre:"Action", score:66 },
+  { title:"CSR Racing 2", year:2016, genre:"Racing", score:66 },
+  { title:"Star Wars: Battlefront II", year:2017, genre:"Shooter", score:66 },
+  { title:"Yooka-Laylee", year:2017, genre:"Platformer", score:66 },
+  { title:"Just Cause 4", year:2018, genre:"Action", score:66 },
+  { title:"MXGP 2019", year:2019, genre:"Racing", score:66 },
+  { title:"Battlefield 2042", year:2021, genre:"Shooter", score:66 },
+  { title:"Madden NFL 22", year:2021, genre:"Sports", score:66 },
+  { title:"SEGA Superstars Tennis", year:2008, genre:"Sports", score:65 },
+  { title:"Alien Breed 2: Assault", year:2010, genre:"Shooter", score:65 },
+  { title:"Warhammer 40,000: Kill Team", year:2014, genre:"Shooter", score:65 },
+  { title:"CSR Racing", year:2012, genre:"Racing", score:65 },
+  { title:"NASCAR '14", year:2014, genre:"Racing", score:65 },
+  { title:"Might & Magic: Heroes VII", year:2015, genre:"Strategy", score:65 },
+  { title:"Champions of Anteria", year:2016, genre:"Strategy", score:65 },
+  { title:"The LEGO Ninjago Movie Video Game", year:2017, genre:"Action", score:65 },
+  { title:"Monster Energy Supercross 2: The Official Videogame", year:2019, genre:"Racing", score:65 },
+  { title:"Warhammer Age of Sigmar: Realms of Ruin", year:2023, genre:"Strategy", score:65 },
+  { title:"Backgammon Blitz", year:2013, genre:"Strategy", score:65 },
+  { title:"Grabbed by the Ghoulies", year:2003, genre:"Action", score:64 },
+  { title:"Everybody Dance", year:2011, genre:"Music", score:64 },
+  { title:"Kinect Sports: Season Two", year:2011, genre:"Sports", score:64 },
+  { title:"Need for Speed", year:2015, genre:"Racing", score:64 },
+  { title:"Battlezone", year:2017, genre:"Shooter", score:64 },
+  { title:"LEGO Worlds", year:2017, genre:"Simulation", score:64 },
+  { title:"MotoGP 18", year:2018, genre:"Racing", score:64 },
+  { title:"Bleeding Edge", year:2020, genre:"Action", score:64 },
+  { title:"Monster Energy Supercross 4: The Official Videogame", year:2021, genre:"Racing", score:64 },
+  { title:"Park Beyond", year:2023, genre:"Simulation", score:64 },
+  { title:"Struggling", year:2020, genre:"Puzzle", score:64 },
+  { title:"Batman Begins", year:2005, genre:"Action", score:63 },
+  { title:"Crash of the Titans", year:2007, genre:"Platformer", score:63 },
+  { title:"F1 2015", year:2015, genre:"Racing", score:63 },
+  { title:"Aerial_Knight's Never Yield", year:2021, genre:"Platformer", score:63 },
+  { title:"The Order: 1886", year:2015, genre:"Action", score:63 },
+  { title:"Unbox: Newbie's Adventure", year:2017, genre:"Platformer", score:63 },
+  { title:"Ghosthunter", year:2003, genre:"Action", score:62 },
+  { title:"Spyro: A Hero's Tail", year:2004, genre:"Platformer", score:62 },
+  { title:"Harry Potter and the Half-Blood Prince", year:2009, genre:"Action", score:62 },
+  { title:"F1 Race Stars", year:2012, genre:"Racing", score:62 },
+  { title:"Danger Zone", year:2017, genre:"Racing", score:62 },
+  { title:"theHunter: Call of the Wild", year:2017, genre:"Simulation", score:62 },
+  { title:"MXGP: Pro", year:2018, genre:"Racing", score:62 },
+  { title:"Hyper Scape", year:2020, genre:"Shooter", score:62 },
+  { title:"Worms Forts: Under Siege", year:2004, genre:"Strategy", score:61 },
+  { title:"Alien Breed: Evolution - Episode 1", year:2009, genre:"Shooter", score:61 },
+  { title:"Quake Arena Arcade", year:2010, genre:"Shooter", score:61 },
+  { title:"Broken Sword 5: The Serpent's Curse", year:2014, genre:"Puzzle", score:61 },
+  { title:"Far Cry 6: Lost Between Worlds", year:2022, genre:"Shooter", score:61 },
+  { title:"Juiced 2: Hot Import Nights", year:2007, genre:"Racing", score:61 },
+  { title:"theHunter: Primal", year:2015, genre:"Simulation", score:60 },
+  { title:"Terminator: Salvation", year:2009, genre:"Shooter", score:60 },
+  { title:"007: Legends", year:2012, genre:"Shooter", score:60 },
+  { title:"Bravo Team", year:2018, genre:"Shooter", score:60 },
+  { title:"Harry Potter and the Deathly Hallows: Part 2", year:2011, genre:"Action", score:60 },
+  { title:"Transformers: Rise of the Dark Spark", year:2014, genre:"Action", score:60 },
+  { title:"The Adventures of Tintin: The Game", year:2011, genre:"Action", score:60 },
+  { title:"Worms: Battle Islands", year:2010, genre:"Strategy", score:60 },
+  { title:"NASCAR: The Game - Inside Line", year:2012, genre:"Racing", score:60 },
+  { title:"Anno 2205: Asteroid Miner", year:2016, genre:"Strategy", score:60 },
+  { title:"Doctor Who: The Eternity Clock", year:2012, genre:"Puzzle", score:59 },
+  { title:"Harry Potter and the Deathly Hallows: Part 1", year:2010, genre:"Action", score:59 },
+  { title:"Damnation", year:2009, genre:"Shooter", score:58 },
+  { title:"Dead Space: Ignition", year:2010, genre:"Puzzle", score:58 },
+  { title:"50 Cent: Blood on the Sand", year:2009, genre:"Shooter", score:58 },
+  { title:"Conflict: Global Terror", year:2004, genre:"Shooter", score:58 },
+  { title:"24: The Game", year:2006, genre:"Action", score:57 },
+  { title:"BlackSite: Area 51", year:2007, genre:"Shooter", score:57 },
+  { title:"Wanted: Weapons of Fate", year:2009, genre:"Shooter", score:57 },
+  { title:"007: Blood Stone", year:2010, genre:"Action", score:57 },
+  { title:"Jagged Alliance: Back in Action", year:2012, genre:"Strategy", score:57 },
+  { title:"Sniper Elite: Nazi Zombie Army", year:2013, genre:"Shooter", score:57 },
+  { title:"Zombie Army Trilogy", year:2015, genre:"Shooter", score:57 },
+  { title:"Dangerous Dr1v1ng", year:2018, genre:"Racing", score:57 },
+  { title:"Destruction AllStars", year:2021, genre:"Racing", score:57 },
+  { title:"Micro Machines", year:2017, genre:"Racing", score:55 },
+  { title:"Athens 2004", year:2004, genre:"Sports", score:56 },
+  { title:"Invincible Tiger", year:2009, genre:"Action", score:56 },
+  { title:"Create", year:2010, genre:"Puzzle", score:56 },
+  { title:"Dead to Rights: Retribution", year:2010, genre:"Action", score:56 },
+  { title:"Test Drive: Ferrari Racing Legends", year:2012, genre:"Racing", score:56 },
+  { title:"Fable: The Journey", year:2012, genre:"Action", score:56 },
+  { title:"F1 2014", year:2014, genre:"Racing", score:56 },
+  { title:"Flockers", year:2014, genre:"Puzzle", score:56 },
+  { title:"Need for Speed: Payback", year:2017, genre:"Racing", score:56 },
+  { title:"Ryse: Son of Rome", year:2013, genre:"Action", score:55 },
+  { title:"Kinect Sports: Rivals", year:2014, genre:"Sports", score:55 },
+  { title:"Beyond Eyes", year:2015, genre:"Puzzle", score:55 },
+  { title:"Crackdown 3", year:2019, genre:"Action", score:55 },
+  { title:"Suicide Squad: Kill the Justice League", year:2024, genre:"Action", score:55 },
+  { title:"Worms: Ultimate Mayhem", year:2011, genre:"Strategy", score:54 },
+  { title:"Disney Epic Mickey 2: The Power of Two", year:2012, genre:"Platformer", score:54 },
+  { title:"Lost Sea", year:2016, genre:"Action", score:54 },
+  { title:"Rogue Trooper Redux", year:2017, genre:"Shooter", score:54 },
+  { title:"A Knight's Quest", year:2019, genre:"Action", score:54 },
+  { title:"Anthem", year:2019, genre:"Shooter", score:54 },
+  { title:"Jagged Alliance: Crossfire", year:2012, genre:"Strategy", score:54 },
+  { title:"Joust Legend", year:2013, genre:"Action", score:55 },
+  { title:"Army of Two: The Devil's Cartel", year:2013, genre:"Shooter", score:55 },
+  { title:"Who Wants to Be a Millionaire?: 3rd Edition", year:2009, genre:"Puzzle", score:55 },
+  { title:"Worms: A Space Oddity", year:2008, genre:"Strategy", score:55 },
+  { title:"Kinect Nat Geo TV", year:2011, genre:"Simulation", score:55 },
+  { title:"Worms", year:2010, genre:"Strategy", score:55 },
+  { title:"WarCraft III: Reforged", year:2020, genre:"Strategy", score:52 },
+  { title:"Space Crew", year:2020, genre:"Simulation", score:52 },
+  { title:"Skull and Bones", year:2024, genre:"Action", score:52 },
+  { title:"Spore: Hero Arena", year:2009, genre:"Action", score:52 },
+  { title:"Drome Racers", year:2002, genre:"Racing", score:51 },
+  { title:"Guitar Hero: Van Halen", year:2009, genre:"Music", score:51 },
+  { title:"Armikrog.", year:2015, genre:"Puzzle", score:51 },
+  { title:"Reign of Fire", year:2002, genre:"Action", score:51 },
+  { title:"Dangerous Golf", year:2016, genre:"Sports", score:51 },
+  { title:"Tom Clancy's Ghost Recon: Breakpoint", year:2019, genre:"Shooter", score:51 },
+  { title:"Crucible", year:2020, genre:"Shooter", score:51 },
+  { title:"Call of Duty: Modern Warfare III", year:2023, genre:"Shooter", score:51 },
+  { title:"CrossFireX: Operation Catalyst", year:2022, genre:"Shooter", score:40 },
+  { title:"SpongeBob Squarepants: Creature from the Krusty Krab", year:2006, genre:"Platformer", score:50 },
+  { title:"Homefront: The Revolution", year:2016, genre:"Shooter", score:50 },
+  { title:"Grand Theft Auto: The Trilogy - The Definitive Edition", year:2021, genre:"Action", score:50 },
+  { title:"Bodycount", year:2011, genre:"Shooter", score:50 },
+  { title:"Medal of Honor: Warfighter", year:2012, genre:"Shooter", score:50 },
+  { title:"Backbreaker Vengeance", year:2011, genre:"Sports", score:50 },
+  { title:"Tom and Jerry in War of the Whiskers", year:2002, genre:"Action", score:50 },
+  { title:"Overkill's The Walking Dead", year:2018, genre:"Shooter", score:49 },
+  { title:"Reservoir Dogs", year:2006, genre:"Action", score:49 },
+  { title:"Super Rub a Dub", year:2007, genre:"Puzzle", score:49 },
+  { title:"Bombshell", year:2016, genre:"Shooter", score:48 },
+  { title:"The Scourge Project: Episodes 1 and 2", year:2010, genre:"Shooter", score:48 },
+  { title:"The Chronicles of Narnia: Prince Caspian", year:2008, genre:"Action", score:48 },
+  { title:"Hot Wheels: Beat That!", year:2007, genre:"Racing", score:47 },
+  { title:"Sniper Elite: Nazi Zombie Army 2", year:2013, genre:"Shooter", score:47 },
+  { title:"Gangs of London", year:2006, genre:"Action", score:47 },
+  { title:"Conflict: Denied Ops", year:2008, genre:"Shooter", score:47 },
+  { title:"NARC", year:2005, genre:"Action", score:46 },
+  { title:"Happy Tree Friends: False Alarm", year:2008, genre:"Action", score:46 },
+  { title:"Lucha Libre AAA: H\u00e9roes Del Ring", year:2010, genre:"Sports", score:46 },
+  { title:"Fishing Sim World", year:2018, genre:"Simulation", score:46 },
+  { title:"The Grand Tour Game", year:2019, genre:"Racing", score:46 },
+  { title:"The Mummy: Tomb of the Dragon Emperor", year:2008, genre:"Action", score:45 },
+  { title:"MTV Pimp My Ride", year:2007, genre:"Racing", score:45 },
+  { title:"Army Men: Major Malfunction", year:2005, genre:"Shooter", score:45 },
+  { title:"Zubo", year:2008, genre:"Strategy", score:45 },
+  { title:"Big Bumpin'", year:2006, genre:"Sports", score:44 },
+  { title:"Crime Life: Gang Wars", year:2005, genre:"Action", score:44 },
+  { title:"Leisure Suit Larry: Box Office Bust", year:2009, genre:"Puzzle", score:43 },
+  { title:"Star Trek", year:2013, genre:"Action", score:43 },
+  { title:"Sneak King", year:2006, genre:"Strategy", score:43 },
+  { title:"Disney's A Christmas Carol", year:2009, genre:"Action", score:41 },
+  { title:"Tak and the Guardians of Gross", year:2008, genre:"Platformer", score:40 },
+  { title:"Bratz The Movie", year:2007, genre:"Action", score:30 },
+  { title:"SpongeBob's Atlantis SquarePantis", year:2007, genre:"Platformer", score:35 },
+  { title:"Horrid Henry's Horrid Adventure", year:2011, genre:"Platformer", score:30 },
+  { title:"Ride to Hell: Retribution", year:2013, genre:"Action", score:19 },
+];
+
+const PRE2005_LABEL = "Before 2005";
+const YEAR_CUTOFF = 2005;
+const DISTINCT_YEARS = [...new Set(ALL_GAMES.filter(g => g.year >= YEAR_CUTOFF).map(g => g.year))].sort((a,b) => a-b);
+const BAR_LABELS = [PRE2005_LABEL, ...DISTINCT_YEARS];
+
+const MC_CATS = [
+  { label:"Universal acclaim",        min:90, max:100, bg:"#1a6b3c", text:"#d4f0e0" },
+  { label:"Generally favourable",     min:61, max:89,  bg:"#1D9E75", text:"#E1F5EE" },
+  { label:"Mixed or average",         min:40, max:60,  bg:"#BA7517", text:"#FAEEDA" },
+  { label:"Generally unfavourable",   min:20, max:39,  bg:"#D85A30", text:"#FAECE7" },
+  { label:"Overwhelming dislike",     min:0,  max:19,  bg:"#A32D2D", text:"#FCEBEB" },
+];
+
+const HIST_BINS = [
+  { label:"0–9",    min:0,  max:9   },
+  { label:"10–19",  min:10, max:19  },
+  { label:"20–29",  min:20, max:29  },
+  { label:"30–39",  min:30, max:39  },
+  { label:"40–49",  min:40, max:49  },
+  { label:"50–59",  min:50, max:59  },
+  { label:"60–69",  min:60, max:69  },
+  { label:"70–79",  min:70, max:79  },
+  { label:"80–89",  min:80, max:89  },
+  { label:"90–100", min:90, max:100 },
+];
+
+const GENRES = [...new Set(ALL_GAMES.map(g => g.genre))].sort();
+const GENRE_PALETTE      = ["#7F77DD","#D85A30","#1D9E75","#378ADD","#BA7517","#D4537E","#534AB7","#0F6E56","#639922","#5F5E5A"];
+const GENRE_FADED_PAL    = ["#CECBF6","#F5C4B3","#9FE1CB","#B5D4F4","#FAC775","#F4C0D1","#AFA9EC","#5DCAA5","#97C459","#B4B2A9"];
+const GENRE_COLOR = {}, GENRE_FADED = {};
+GENRES.forEach((g,i) => { GENRE_COLOR[g] = GENRE_PALETTE[i%10]; GENRE_FADED[g] = GENRE_FADED_PAL[i%10]; });
+
+function mcColor(s) { const c = MC_CATS.find(x => s >= x.min && s <= x.max); return c ? c.bg : "#888"; }
+function mcTC(s)    { const c = MC_CATS.find(x => s >= x.min && s <= x.max); return c ? {bg:c.bg, text:c.text} : {bg:"#888",text:"#fff"}; }
+
+let activeYearBucket = null, activeGenre = null, activeScoreBin = null;
+let currentPage = 1, sortKey = "score", sortDir = -1, filteredCache = [];
+const PAGE_SIZE = 25;
+
+function yearMatchesBucket(year, bucket) {
+  return bucket === PRE2005_LABEL ? year < YEAR_CUTOFF : year === bucket;
+}
+
+function getFiltered() {
+  return ALL_GAMES.filter(g =>
+    (activeYearBucket === null || yearMatchesBucket(g.year, activeYearBucket)) &&
+    (activeGenre === null || g.genre === activeGenre) &&
+    (activeScoreBin === null || (g.score >= activeScoreBin.min && g.score <= activeScoreBin.max))
+  );
+}
+
+function clearFilters() {
+  activeYearBucket = null; activeGenre = null; activeScoreBin = null;
+  currentPage = 1; update();
+}
+
+function setSort(k) {
+  if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = k === "score" ? -1 : 1; }
+  ["title","year","genre","score"].forEach(x => {
+    document.getElementById("sort-"+x).textContent = x === sortKey ? (sortDir === 1 ? "▲" : "▼") : "";
+  });
+  currentPage = 1; renderTable(filteredCache);
+}
+
+function animVal(el, target) {
+  const s = parseInt(el.textContent) || 0;
+  if (isNaN(target)) { el.textContent = "—"; return; }
+  const dur = 400, t0 = performance.now();
+  function step(now) {
+    const t = Math.min((now-t0)/dur, 1), e = 1 - Math.pow(1-t, 3);
+    el.textContent = Math.round(s + (target-s)*e);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+let yearChart, genreChart, histChart;
+
+function buildYearChart() {
+  yearChart = new Chart(document.getElementById("yearChart"), {
+    type: "bar",
+    data: { labels: BAR_LABELS, datasets: [{ data: BAR_LABELS.map(()=>0), backgroundColor:[], borderColor:[], borderWidth:1.5, borderRadius:3 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration:400, easing:"easeInOutQuart" },
+      plugins: { legend:{display:false}, tooltip:{ callbacks:{ label: ctx => " "+ctx.parsed.y+" games" } } },
+      scales: {
+        x: { ticks:{ font:{size:9}, color:"#888780", maxRotation:45, autoSkip:true, maxTicksLimit:15 }, grid:{display:false} },
+        y: { ticks:{ font:{size:10}, color:"#888780" }, grid:{ color:"rgba(0,0,0,0.06)" }, beginAtZero:true }
+      },
+      onClick(evt) {
+        const pts = yearChart.getElementsAtEventForMode(evt,"nearest",{intersect:true},false);
+        if (!pts.length) return;
+        const bucket = BAR_LABELS[pts[0].index];
+        activeYearBucket = (activeYearBucket === bucket) ? null : bucket;
+        currentPage = 1; update();
+      },
+      onHover(evt,els) { evt.native.target.style.cursor = els.length ? "pointer" : "default"; }
+    }
+  });
+}
+
+function buildGenreChart() {
+  genreChart = new Chart(document.getElementById("genreChart"), {
+    type: "doughnut",
+    data: { labels: GENRES, datasets:[{ data: GENRES.map(()=>0), backgroundColor: GENRES.map(g=>GENRE_COLOR[g]), borderWidth:2, borderColor:"#fff", hoverOffset:6 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout:"60%",
+      animation: { duration:400, easing:"easeInOutQuart" },
+      plugins: { legend:{display:false}, tooltip:{ callbacks:{ label: ctx => " "+ctx.label+": "+ctx.parsed+" games" } } },
+      onClick(evt) {
+        const pts = genreChart.getElementsAtEventForMode(evt,"nearest",{intersect:true},false);
+        if (!pts.length) return;
+        const gn = GENRES[pts[0].index];
+        activeGenre = (activeGenre === gn) ? null : gn;
+        currentPage = 1; update();
+      },
+      onHover(evt,els) { evt.native.target.style.cursor = els.length ? "pointer" : "default"; }
+    }
+  });
+  const el = document.getElementById("genreLegend");
+  GENRES.forEach(g => {
+    const item = document.createElement("span");
+    item.className = "legend-item";
+    item.innerHTML = `<span class="swatch" style="background:${GENRE_COLOR[g]};"></span>${g}`;
+    item.onclick = () => { activeGenre = (activeGenre === g) ? null : g; currentPage = 1; update(); };
+    el.appendChild(item);
+  });
+}
+
+function buildHistChart() {
+  histChart = new Chart(document.getElementById("histChart"), {
+    type: "bar",
+    data: {
+      labels: HIST_BINS.map(b => b.label),
+      datasets:[{ data: Array(10).fill(0), backgroundColor: HIST_BINS.map(b => mcColor(b.min+5)), borderWidth:0, borderRadius:3, barPercentage:0.85, categoryPercentage:0.95 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration:400, easing:"easeInOutQuart" },
+      plugins: { legend:{display:false}, tooltip:{ callbacks:{ title: ctx => "Score "+ctx[0].label, label: ctx => " "+ctx.parsed.y+" game"+(ctx.parsed.y!==1?"s":"") } } },
+      scales: {
+        x: { ticks:{ font:{size:10}, color:"#888780", autoSkip:false, maxRotation:0 }, grid:{display:false} },
+        y: { ticks:{ font:{size:10}, color:"#888780" }, grid:{ color:"rgba(0,0,0,0.06)" }, beginAtZero:true }
+      },
+      onClick(evt) {
+        const pts = histChart.getElementsAtEventForMode(evt,"nearest",{intersect:true},false);
+        if (!pts.length) return;
+        const bin = HIST_BINS[pts[0].index];
+        activeScoreBin = (activeScoreBin && activeScoreBin.min === bin.min) ? null : bin;
+        currentPage = 1; update();
+      },
+      onHover(evt,els) { evt.native.target.style.cursor = els.length ? "pointer" : "default"; }
+    }
+  });
+}
+
+function update() {
+  filteredCache = getFiltered();
+  const data = filteredCache;
+  const hasY = activeYearBucket !== null, hasG = activeGenre !== null, hasS = activeScoreBin !== null;
+  const hasF = hasY || hasG || hasS;
+
+  const avg = data.length ? Math.round(data.reduce((s,g) => s+g.score, 0) / data.length) : NaN;
+  animVal(document.getElementById("kpiGames"), data.length);
+  animVal(document.getElementById("kpiRating"), avg);
+  document.getElementById("kpiGamesSub").textContent = hasY ? (activeYearBucket === PRE2005_LABEL ? "before 2005" : "in "+activeYearBucket) : "across all cohorts";
+
+  const yTag = document.getElementById("yearTag"), gTag = document.getElementById("genreTag"), sTag = document.getElementById("scoreTag");
+  yTag.textContent = hasY ? activeYearBucket : ""; yTag.classList.toggle("visible", hasY);
+  gTag.textContent = hasG ? activeGenre : ""; gTag.classList.toggle("visible", hasG);
+  sTag.textContent = hasS ? "Score "+activeScoreBin.label : ""; sTag.classList.toggle("visible", hasS);
+  document.getElementById("clearBtn").classList.toggle("visible", hasF);
+
+  const yearCounts = BAR_LABELS.map(bucket =>
+    ALL_GAMES.filter(g =>
+      yearMatchesBucket(g.year, bucket) &&
+      (hasG ? g.genre === activeGenre : true) &&
+      (hasS ? g.score >= activeScoreBin.min && g.score <= activeScoreBin.max : true)
+    ).length
+  );
+  yearChart.data.datasets[0].data = yearCounts;
+  yearChart.data.datasets[0].backgroundColor = BAR_LABELS.map(b => (!hasY || b === activeYearBucket) ? "#CECBF6" : "rgba(175,169,236,0.2)");
+  yearChart.data.datasets[0].borderColor     = BAR_LABELS.map(b => (!hasY || b === activeYearBucket) ? "#7F77DD" : "rgba(127,119,221,0.15)");
+  yearChart.update();
+
+  const forGenre = ALL_GAMES.filter(g =>
+    (hasY ? yearMatchesBucket(g.year, activeYearBucket) : true) &&
+    (hasS ? g.score >= activeScoreBin.min && g.score <= activeScoreBin.max : true)
+  );
+  genreChart.data.datasets[0].data = GENRES.map(g => forGenre.filter(d => d.genre === g).length);
+  genreChart.data.datasets[0].backgroundColor = GENRES.map(g => (!hasG || g === activeGenre) ? GENRE_COLOR[g] : GENRE_FADED[g]);
+  genreChart.update();
+
+  const forHist = ALL_GAMES.filter(g =>
+    (hasY ? yearMatchesBucket(g.year, activeYearBucket) : true) &&
+    (hasG ? g.genre === activeGenre : true)
+  );
+  histChart.data.datasets[0].data = HIST_BINS.map(b => forHist.filter(g => g.score >= b.min && g.score <= b.max).length);
+  histChart.data.datasets[0].backgroundColor = HIST_BINS.map(b => {
+    const col = mcColor(b.min+5);
+    return (!hasS || activeScoreBin.min === b.min) ? col : col+"44";
+  });
+  histChart.update();
+
+  const parts = [];
+  if (hasY) parts.push(activeYearBucket);
+  if (hasG) parts.push(activeGenre);
+  if (hasS) parts.push("score "+activeScoreBin.label);
+  document.getElementById("histSub").textContent = (parts.length ? parts.join(" · ") : "All games") + " · click a bar to filter by score range";
+
+  renderTable(data);
+}
+
+function renderTable(data) {
+  const sorted = [...data].sort((a,b) => {
+    const av = a[sortKey], bv = b[sortKey];
+    return typeof av === "string" ? av.localeCompare(bv)*sortDir : (av-bv)*sortDir;
+  });
+  const total = sorted.length, totalPages = Math.max(1, Math.ceil(total/PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage-1)*PAGE_SIZE, pageData = sorted.slice(start, start+PAGE_SIZE);
+  document.getElementById("tableSubtitle").textContent =
+    "Showing "+(total===0?0:start+1)+"–"+Math.min(start+PAGE_SIZE,total)+" of "+total+" games";
+
+  const tbody = document.getElementById("gameTableBody");
+  const wasEmpty = tbody.querySelectorAll("tr").length === 0;
+  tbody.querySelectorAll("tr").forEach(r => { r.style.opacity="0"; r.style.transform="translateY(4px)"; });
+
+  setTimeout(() => {
+    tbody.innerHTML = pageData.map(g => {
+      const mc  = mcTC(g.score);
+      const slug = g.title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+      const mcUrl = "https://www.metacritic.com/game/"+slug+"/";
+      const gc = GENRE_COLOR[g.genre]||"#888", gf = GENRE_FADED[g.genre]||"#eee";
+      const mp = g.mustPlay ? `<span class="must-play-badge"><span>★</span> Must Play</span>` : "";
+      return `<tr style="opacity:0;transform:translateY(5px);transition:opacity 0.3s ease,transform 0.3s ease;">
+        <td style="font-weight:500;color:var(--text-primary);">${g.title}${mp}</td>
+        <td style="color:var(--text-secondary);">${g.year}</td>
+        <td><span class="genre-tag" style="background:${gf};color:${gc};">${g.genre}</span></td>
+        <td><span class="score-badge" style="background:${mc.bg};color:${mc.text};">${g.score}</span></td>
+        <td><a class="mc-link" href="${mcUrl}" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr>`;
+    }).join("");
+    requestAnimationFrame(() => {
+      tbody.querySelectorAll("tr").forEach((row,i) => {
+        setTimeout(() => { row.style.opacity="1"; row.style.transform="translateY(0)"; }, i*14);
+      });
+    });
+  }, wasEmpty ? 0 : 150);
+
+  renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+  document.getElementById("pageInfo").textContent = "Page "+currentPage+" of "+totalPages;
+  const btns = document.getElementById("pageBtns"); btns.innerHTML = "";
+  const prev = document.createElement("button");
+  prev.className="page-btn"; prev.textContent="← Prev"; prev.disabled = currentPage===1;
+  prev.onclick = () => { currentPage--; renderTable(filteredCache); }; btns.appendChild(prev);
+  getPageRange(currentPage, totalPages).forEach(p => {
+    if (p === "…") {
+      const el = document.createElement("span");
+      el.style.cssText = "font-size:11px;color:var(--text-secondary);padding:0 4px;align-self:center;";
+      el.textContent = "…"; btns.appendChild(el);
+    } else {
+      const b = document.createElement("button");
+      b.className = "page-btn"+(p===currentPage?" active":"");
+      b.textContent = p;
+      b.onclick = () => { currentPage=p; renderTable(filteredCache); }; btns.appendChild(b);
+    }
+  });
+  const next = document.createElement("button");
+  next.className="page-btn"; next.textContent="Next →"; next.disabled = currentPage===totalPages;
+  next.onclick = () => { currentPage++; renderTable(filteredCache); }; btns.appendChild(next);
+}
+
+function getPageRange(cur, total) {
+  if (total <= 7) return Array.from({length:total}, (_,i) => i+1);
+  if (cur <= 4)   return [1,2,3,4,5,"…",total];
+  if (cur >= total-3) return [1,"…",total-4,total-3,total-2,total-1,total];
+  return [1,"…",cur-1,cur,cur+1,"…",total];
+}
+
+buildYearChart(); buildGenreChart(); buildHistChart(); update();
+</script>
+</body>
+</html>
