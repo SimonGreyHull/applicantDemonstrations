@@ -1088,7 +1088,11 @@ function renderTable(data) {
   setTimeout(() => {
     tbody.innerHTML = pageData.map(g => {
       const mc  = mcTC(g.score);
-      const slug = g.title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+      // const slug = g.title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+      const slug = g.title.toLowerCase()
+            .replace(/'/g, "")              // remove apostrophes
+            .replace(/[^a-z0-9]+/g, "-")   // replace other non-alphanumerics with -
+            .replace(/^-|-$/g, "");        // trim leading/trailing -
       const mcUrl = "https://www.metacritic.com/game/"+slug+"/";
       const gc = GENRE_COLOR[g.genre]||"#888", gf = GENRE_FADED[g.genre]||"#eee";
       const mp = g.mustPlay ? `<span class="must-play-badge"><span>★</span> Must Play</span>` : "";
