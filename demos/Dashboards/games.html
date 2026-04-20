@@ -1,39 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
+<!-- saved from url=(0083)https://simongreyhull.github.io/applicantDemonstrations/demos/Dashboards/games.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>University of Hull Graduate Games Dashboard</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg-page:       #f5f4f0;
+      --bg-page:       #eef2f7;
       --bg-primary:    #ffffff;
-      --bg-secondary:  #f0ede8;
-      --text-primary:  #1a1a1a;
-      --text-secondary:#6b6b6b;
-      --border:        rgba(0,0,0,0.1);
-      --border-mid:    rgba(0,0,0,0.18);
+      --bg-secondary:  #e4ecf5;
+      --text-primary:  #0a0f2e;
+      --text-secondary:#5a6480;
+      --border:        rgba(14,22,71,0.1);
+      --border-mid:    rgba(14,22,71,0.18);
       --radius-md:     8px;
       --radius-lg:     12px;
-      --purple:        #7F77DD;
-      --purple-light:  #CECBF6;
-      --purple-dark:   #534AB7;
+      --purple:        #5BA4CF;
+      --purple-light:  #C0DCF0;
+      --purple-dark:   #0E1647;
       --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg-page:      #0f1117;
-        --bg-primary:   #1a1d27;
-        --bg-secondary: #23263a;
-        --text-primary: #f0f2f8;
-        --text-secondary:#8b8fa8;
+        --bg-page:      #0a0e1f;
+        --bg-primary:   #111629;
+        --bg-secondary: #1a2140;
+        --text-primary: #e8edf8;
+        --text-secondary:#7a88b0;
         --border:       rgba(255,255,255,0.08);
         --border-mid:   rgba(255,255,255,0.15);
-        --purple-light: rgba(175,169,236,0.25);
+        --purple-light: rgba(91,164,207,0.2);
       }
     }
 
@@ -45,47 +45,37 @@
       padding: 0;
     }
 
-    .site-header {
-      background: var(--bg-primary);
-      border-bottom: 0.5px solid var(--border);
-      padding: 18px 32px;
-      display: flex;
-      align-items: baseline;
-      gap: 16px;
-    }
-    .site-header h1 { font-size: 18px; font-weight: 500; color: var(--text-primary); }
-    .site-header span { font-size: 13px; color: var(--text-secondary); }
 
     .dash { max-width: 1100px; margin: 0 auto; padding: 28px 24px 48px; }
 
     .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
     .kpi {
-      background: var(--bg-secondary);
+      background: var(--hull-navy);
       border-radius: var(--radius-md);
       padding: 16px 18px;
     }
-    .kpi-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-    .kpi-value { font-size: 26px; font-weight: 500; color: var(--text-primary); }
-    .kpi-sub   { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+    .kpi-label { font-size: 11px; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .kpi-value { font-size: 26px; font-weight: 700; color: var(--hull-amber); }
+    .kpi-sub   { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 3px; }
 
     .filter-status {
       display: flex; align-items: center; gap: 6px;
       flex-wrap: wrap; margin-bottom: 16px; min-height: 26px;
     }
     .active-tag {
-      font-size: 11px; background: #EEEDFE; color: #3C3489;
+      font-size: 11px; background: var(--hull-navy); color: #fff;
       padding: 3px 10px; border-radius: 20px;
       display: none; opacity: 0; transition: opacity 0.3s;
     }
     .active-tag.visible { display: inline-block; opacity: 1; }
-    .active-tag.mc-tag  { background: #E1F5EE; color: #085041; }
+    .active-tag.mc-tag  { background: #1D9E75; color: #fff; }
     .clear-btn {
-      background: transparent; border: 0.5px solid var(--border-mid);
-      color: var(--text-secondary); font-size: 11px;
-      padding: 3px 10px; border-radius: 20px; cursor: pointer;
-      display: none; margin-left: auto; transition: all 0.15s;
+      background: var(--hull-navy); border: none;
+      color: #fff; font-size: 11px; font-weight: 500;
+      padding: 4px 14px; border-radius: 20px; cursor: pointer;
+      display: none; margin-left: auto; transition: opacity 0.15s;
     }
-    .clear-btn:hover { color: var(--text-primary); }
+    .clear-btn:hover { opacity: 0.8; }
     .clear-btn.visible { display: block; }
 
     .row2 { display: grid; grid-template-columns: 3fr 2fr; gap: 14px; margin-bottom: 14px; }
@@ -182,27 +172,110 @@
 
     .sort-arrow { font-size: 9px; opacity: 0.5; margin-left: 2px; }
 
+    /* Hull brand colours */
+    :root {
+      --hull-navy:  #0E1647;
+      --hull-amber: #FFC77A;
+      --hull-sky:   #5BA4CF;
+      --hull-mint:  #4BBFA0;
+    }
+
+    /* Hero banner */
+    .hull-hero {
+      background: var(--hull-navy);
+      color: #fff;
+      padding: 48px 32px 36px;
+      text-align: center;
+    }
+    .hull-hero-eyebrow {
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--hull-amber); margin-bottom: 14px; font-weight: 500;
+    }
+    .hull-hero-title {
+      font-size: clamp(22px, 3.5vw, 36px); font-weight: 600; line-height: 1.25;
+      color: #fff; max-width: 700px; margin: 0 auto 12px;
+    }
+    .hull-hero-title em { color: var(--hull-amber); font-style: normal; }
+    .hull-hero-sub {
+      font-size: 15px; color: rgba(255,255,255,0.7); max-width: 580px;
+      margin: 0 auto; line-height: 1.6;
+    }
+
+    /* Stat strip */
+    .hull-stats {
+      background: var(--hull-navy);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex; justify-content: center; gap: 0;
+      padding: 0;
+    }
+    .hull-stat {
+      flex: 1; max-width: 280px;
+      padding: 28px 24px;
+      text-align: center;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+    .hull-stat:last-child { border-right: none; }
+    .hull-stat-num {
+      font-size: clamp(28px, 4vw, 40px); font-weight: 700;
+      color: var(--hull-amber); line-height: 1;
+    }
+    .hull-stat-label {
+      font-size: 12px; color: rgba(255,255,255,0.6);
+      margin-top: 6px; letter-spacing: 0.03em;
+    }
+
+    /* Hull footer */
     .site-footer {
-      text-align: center; padding: 24px;
-      font-size: 11px; color: var(--text-secondary);
-      border-top: 0.5px solid var(--border);
+      background: var(--hull-navy);
+      color: rgba(255,255,255,0.55);
+      text-align: center; padding: 28px 24px;
+      font-size: 12px;
       margin-top: 8px;
+    }
+    .site-footer strong { color: var(--hull-amber); font-weight: 500; }
+    .site-footer a { color: var(--hull-amber); text-decoration: none; font-weight: 500; font-size: 13px; }
+    .site-footer a:hover { text-decoration: underline; }
+    .footer-tag {
+      display: inline-block; margin-top: 8px;
+      font-size: 11px; letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.35);
     }
   </style>
 </head>
 <body>
 
-<header class="site-header">
-  <h1>University of Hull Graduate Games Dashboard</h1>
-  <span>569 games · all cohorts</span>
-</header>
+<div class="hull-hero">
+  <div class="hull-hero-eyebrow">University of Hull · Games Programming</div>
+  <h1 class="hull-hero-title">Hull DNA runs through the <em>games industry</em></h1>
+  <p class="hull-hero-sub">For over 30 years, Hull graduates have been credited on the games you grew up playing. Every title below carries that DNA.</p>
+</div>
+
+<div class="hull-stats">
+  <div class="hull-stat">
+    <div class="hull-stat-num">30+</div>
+    <div class="hull-stat-label">years of graduates developing</div>
+  </div>
+  <div class="hull-stat">
+    <div class="hull-stat-num" id="statTitles">—</div>
+    <div class="hull-stat-label">titles carrying Hull graduate credits</div>
+  </div>
+  <div class="hull-stat">
+    <div class="hull-stat-num">1bn+</div>
+    <div class="hull-stat-label">copies sold across those titles (yes, that's over 1,000,000,000!)</div>
+  </div>
+  <div class="hull-stat">
+    <div class="hull-stat-num">100+</div>
+    <div class="hull-stat-label">industry awards won, including BAFTAs, DICE Awards &amp; Golden Joysticks</div>
+  </div>
+</div>
+
 
 <main class="dash">
 
   <div class="kpi-grid">
     <div class="kpi">
       <div class="kpi-label">Total games</div>
-      <div class="kpi-value" id="kpiGames">—</div>
+      <div class="kpi-value" id="kpiGames">562</div>
       <div class="kpi-sub" id="kpiGamesSub">across all cohorts</div>
     </div>
     <div class="kpi">
@@ -212,13 +285,13 @@
     </div>
     <div class="kpi">
       <div class="kpi-label">Avg Metacritic</div>
-      <div class="kpi-value" id="kpiRating">—</div>
+      <div class="kpi-value" id="kpiRating">Infinity</div>
       <div class="kpi-sub">out of 100</div>
     </div>
   </div>
 
   <div class="filter-status">
-    <span id="yearTag"  class="active-tag"></span>
+    <span id="yearTag" class="active-tag"></span>
     <span id="genreTag" class="active-tag"></span>
     <span id="scoreTag" class="active-tag mc-tag"></span>
     <button class="clear-btn" id="clearBtn" onclick="clearFilters()">Clear all filters</button>
@@ -229,7 +302,7 @@
       <div class="card-title">Games released per year</div>
       <div class="hint"><span class="hint-icon">i</span> Click a bar to filter by year</div>
       <div style="position:relative;height:210px;">
-        <canvas id="yearChart" role="img" aria-label="Bar chart of games released per year. Click a bar to filter.">Games by year.</canvas>
+        <canvas id="yearChart" role="img" aria-label="Bar chart of games released per year. Click a bar to filter." width="580" height="210" style="display: block; box-sizing: border-box; height: 210px; width: 580px; cursor: default;">Games by year.</canvas>
       </div>
     </div>
     <div class="card" style="margin-bottom:0;">
@@ -237,7 +310,7 @@
       <div class="hint"><span class="hint-icon">i</span> Click a segment to filter by genre</div>
       <div class="legend-row" id="genreLegend"></div>
       <div style="position:relative;height:155px;">
-        <canvas id="genreChart" role="img" aria-label="Donut chart of game genres. Click a segment to filter.">Genre distribution.</canvas>
+        <canvas id="genreChart" role="img" aria-label="Donut chart of game genres. Click a segment to filter." width="373" height="155" style="display: block; box-sizing: border-box; height: 155px; width: 373px; cursor: default;">Genre distribution.</canvas>
       </div>
     </div>
   </div>
@@ -253,7 +326,7 @@
       <span class="mc-pill" style="background:#A32D2D;color:#FCEBEB;">Overwhelming dislike · 0–19</span>
     </div>
     <div style="position:relative;height:200px;">
-      <canvas id="histChart" role="img" aria-label="Histogram of Metacritic scores colour coded by review category. Click a bar to filter.">Score distribution 0–100.</canvas>
+      <canvas id="histChart" role="img" aria-label="Histogram of Metacritic scores colour coded by review category. Click a bar to filter." width="1010" height="200" style="display: block; box-sizing: border-box; height: 200px; width: 1010px; cursor: default;">Score distribution 0–100.</canvas>
     </div>
   </div>
 
@@ -261,7 +334,7 @@
     <div class="table-hdr">
       <div>
         <div class="card-title">All games</div>
-        <div class="card-sub" id="tableSubtitle" style="margin-bottom:0;">Loading…</div>
+        <div class="card-sub" id="tableSubtitle" style="margin-bottom:0;">Showing 1–25 of 562 games</div>
       </div>
       <div class="must-play-key">
         <span class="must-play-badge"><span>★</span> Must Play</span>= Metacritic 90+
@@ -271,24 +344,181 @@
     <div style="overflow-x:auto;">
       <table class="game-table">
         <thead><tr>
-          <th class="col-title" onclick="setSort('title')">Title <span class="sort-arrow" id="sort-title"></span></th>
-          <th class="col-year"  onclick="setSort('year')">Year <span class="sort-arrow" id="sort-year"></span></th>
-          <th class="col-genre" onclick="setSort('genre')">Genre <span class="sort-arrow" id="sort-genre"></span></th>
-          <th class="col-score" onclick="setSort('score')">Score <span class="sort-arrow" id="sort-score">▼</span></th>
+          <th class="col-title" onclick="setSort(&#39;title&#39;)">Title <span class="sort-arrow" id="sort-title">▲</span></th>
+          <th class="col-year" onclick="setSort(&#39;year&#39;)">Year <span class="sort-arrow" id="sort-year"></span></th>
+          <th class="col-genre" onclick="setSort(&#39;genre&#39;)">Genre <span class="sort-arrow" id="sort-genre"></span></th>
+          <th class="col-score" onclick="setSort(&#39;score&#39;)">Score <span class="sort-arrow" id="sort-score"></span></th>
           <th class="col-link">Metacritic</th>
         </tr></thead>
-        <tbody id="gameTableBody"></tbody>
+        <tbody id="gameTableBody"><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">007: Blood Stone</td>
+        <td style="color:var(--text-secondary);">2010</td>
+        <td><span class="genre-tag" style="background:#C0DCF0;color:#5BA4CF;">Action</span></td>
+        <td><span class="score-badge" style="background:#BA7517;color:#FAEEDA;">57</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/007-blood-stone/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">007: Legends</td>
+        <td style="color:var(--text-secondary);">2012</td>
+        <td><span class="genre-tag" style="background:#A8C5DC;color:#0E1647;">Shooter</span></td>
+        <td><span class="score-badge" style="background:#BA7517;color:#FAEEDA;">60</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/007-legends/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">11-11: Memories Retold</td>
+        <td style="color:var(--text-secondary);">2018</td>
+        <td><span class="genre-tag" style="background:#B5D4F4;color:#378ADD;">Puzzle</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">75</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/11-11-memories-retold/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">24: The Game</td>
+        <td style="color:var(--text-secondary);">2006</td>
+        <td><span class="genre-tag" style="background:#C0DCF0;color:#5BA4CF;">Action</span></td>
+        <td><span class="score-badge" style="background:#BA7517;color:#FAEEDA;">57</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/24-the-game/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">50 Cent: Blood on the Sand</td>
+        <td style="color:var(--text-secondary);">2009</td>
+        <td><span class="genre-tag" style="background:#A8C5DC;color:#0E1647;">Shooter</span></td>
+        <td><span class="score-badge" style="background:#BA7517;color:#FAEEDA;">58</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/50-cent-blood-on-the-sand/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">A Knight's Quest</td>
+        <td style="color:var(--text-secondary);">2019</td>
+        <td><span class="genre-tag" style="background:#C0DCF0;color:#5BA4CF;">Action</span></td>
+        <td><span class="score-badge" style="background:#BA7517;color:#FAEEDA;">54</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/a-knights-quest/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">AC/DC Live: Rock Band - Track Pack</td>
+        <td style="color:var(--text-secondary);">2008</td>
+        <td><span class="genre-tag" style="background:#F5C4B3;color:#D85A30;">Music</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">75</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/ac-dc-live-rock-band-track-pack/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Aerial_Knight's Never Yield</td>
+        <td style="color:var(--text-secondary);">2021</td>
+        <td><span class="genre-tag" style="background:#9FE1CB;color:#1D9E75;">Platformer</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">63</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/aerial-knights-never-yield/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Age of Empires II: Definitive Edition</td>
+        <td style="color:var(--text-secondary);">2019</td>
+        <td><span class="genre-tag" style="background:#B4B2A9;color:#5F5E5A;">Strategy</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">83</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/age-of-empires-ii-definitive-edition/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Age of Empires II: Definitive Edition - Return of Rome</td>
+        <td style="color:var(--text-secondary);">2023</td>
+        <td><span class="genre-tag" style="background:#B4B2A9;color:#5F5E5A;">Strategy</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">73</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/age-of-empires-ii-definitive-edition-return-of-rome/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Age of Empires IV</td>
+        <td style="color:var(--text-secondary);">2021</td>
+        <td><span class="genre-tag" style="background:#B4B2A9;color:#5F5E5A;">Strategy</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">80</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/age-of-empires-iv/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Age of Empires: Definitive Edition</td>
+        <td style="color:var(--text-secondary);">2018</td>
+        <td><span class="genre-tag" style="background:#B4B2A9;color:#5F5E5A;">Strategy</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">67</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/age-of-empires-definitive-edition/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Alan Wake II</td>
+        <td style="color:var(--text-secondary);">2023</td>
+        <td><span class="genre-tag" style="background:#C0DCF0;color:#5BA4CF;">Action</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">89</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/alan-wake-ii/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Alan Wake: Remastered</td>
+        <td style="color:var(--text-secondary);">2021</td>
+        <td><span class="genre-tag" style="background:#C0DCF0;color:#5BA4CF;">Action</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">77</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/alan-wake-remastered/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Alien Breed 2: Assault</td>
+        <td style="color:var(--text-secondary);">2010</td>
+        <td><span class="genre-tag" style="background:#A8C5DC;color:#0E1647;">Shooter</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">65</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/alien-breed-2-assault/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Alien Breed 3: Descent</td>
+        <td style="color:var(--text-secondary);">2010</td>
+        <td><span class="genre-tag" style="background:#A8C5DC;color:#0E1647;">Shooter</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">66</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/alien-breed-3-descent/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Alien Breed: Evolution - Episode 1</td>
+        <td style="color:var(--text-secondary);">2009</td>
+        <td><span class="genre-tag" style="background:#A8C5DC;color:#0E1647;">Shooter</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">61</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/alien-breed-evolution-episode-1/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Alien: Isolation</td>
+        <td style="color:var(--text-secondary);">2014</td>
+        <td><span class="genre-tag" style="background:#A8C5DC;color:#0E1647;">Shooter</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">77</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/alien-isolation/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Anno 2205</td>
+        <td style="color:var(--text-secondary);">2015</td>
+        <td><span class="genre-tag" style="background:#B4B2A9;color:#5F5E5A;">Strategy</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">70</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/anno-2205/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Anno 2205: Asteroid Miner</td>
+        <td style="color:var(--text-secondary);">2016</td>
+        <td><span class="genre-tag" style="background:#B4B2A9;color:#5F5E5A;">Strategy</span></td>
+        <td><span class="score-badge" style="background:#BA7517;color:#FAEEDA;">60</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/anno-2205-asteroid-miner/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Anthem</td>
+        <td style="color:var(--text-secondary);">2019</td>
+        <td><span class="genre-tag" style="background:#A8C5DC;color:#0E1647;">Shooter</span></td>
+        <td><span class="score-badge" style="background:#BA7517;color:#FAEEDA;">54</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/anthem/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Armikrog.</td>
+        <td style="color:var(--text-secondary);">2015</td>
+        <td><span class="genre-tag" style="background:#B5D4F4;color:#378ADD;">Puzzle</span></td>
+        <td><span class="score-badge" style="background:#BA7517;color:#FAEEDA;">51</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/armikrog/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Army Men: Major Malfunction</td>
+        <td style="color:var(--text-secondary);">2005</td>
+        <td><span class="genre-tag" style="background:#A8C5DC;color:#0E1647;">Shooter</span></td>
+        <td><span class="score-badge" style="background:#BA7517;color:#FAEEDA;">45</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/army-men-major-malfunction/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">Army of Two: The Devil's Cartel</td>
+        <td style="color:var(--text-secondary);">2013</td>
+        <td><span class="genre-tag" style="background:#A8C5DC;color:#0E1647;">Shooter</span></td>
+        <td><span class="score-badge" style="background:#BA7517;color:#FAEEDA;">55</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/army-of-two-the-devils-cartel/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr><tr style="opacity: 1; transform: translateY(0px); transition: opacity 0.3s, transform 0.3s;">
+        <td style="font-weight:500;color:var(--text-primary);">As Dusk Falls</td>
+        <td style="color:var(--text-secondary);">2022</td>
+        <td><span class="genre-tag" style="background:#B5D4F4;color:#378ADD;">Puzzle</span></td>
+        <td><span class="score-badge" style="background:#1D9E75;color:#E1F5EE;">75</span></td>
+        <td><a class="mc-link" href="https://www.metacritic.com/game/as-dusk-falls/" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+      </tr></tbody>
       </table>
     </div>
     <div class="pagination">
-      <div class="pagination-info" id="pageInfo"></div>
-      <div class="page-btns" id="pageBtns"></div>
+      <div class="pagination-info" id="pageInfo">Page 1 of 23</div>
+      <div class="page-btns" id="pageBtns"><button class="page-btn" disabled="">← Prev</button><button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">3</button><button class="page-btn">4</button><button class="page-btn">5</button><span style="font-size: 11px; color: var(--text-secondary); padding: 0px 4px; align-self: center;">…</span><button class="page-btn">23</button><button class="page-btn">Next →</button></div>
     </div>
   </div>
 
 </main>
 
-<footer class="site-footer">Graduate Games Dashboard · data reflects Metacritic scores at time of release</footer>
+<footer class="site-footer">
+  <strong>University of Hull</strong> · Graduate Games Dashboard<br>
+  Metacritic scores may change over time ·
+  <a href="https://www.hull.ac.uk/study/undergraduate/courses/computer-science-for-games-programming-bsc-meng-hons" target="_blank" rel="noopener">Computer Science for Games Programming — Undergraduate (BSc) ↗</a>
+  &nbsp;·&nbsp;
+  <a href="https://www.hull.ac.uk/study/postgraduate-taught/courses/computer-science-for-games-programming-msc" target="_blank" rel="noopener">Computer Science for Games Programming — Postgraduate (MSc) ↗</a>
+  <br><span class="footer-tag">#HullGamesProg</span>
+</footer>
 
 <script>
 const ALL_GAMES = [
@@ -411,7 +641,7 @@ const ALL_GAMES = [
   { title:"Viva Pi\u00f1ata: Trouble in Paradise", year:2008, genre:"Simulation", score:81 },
   { title:"MotorStorm: Pacific Rift", year:2008, genre:"Racing", score:81 },
   { title:"Blur", year:2010, genre:"Racing", score:81 },
-  { title:"Assassins Creed: Shadows", year:2025, genre:"Action", score:"81" },
+  { title:"Assassins Creed: Shadows", year:2025, genre:"Action", score:81 },
   { title:"Split/Second", year:2010, genre:"Racing", score:81 },
   { title:"Enslaved: Odyssey to the West", year:2010, genre:"Action", score:81 },
   { title:"Tom Clancy's Splinter Cell: Blacklist", year:2013, genre:"Shooter", score:81 },
@@ -854,6 +1084,7 @@ const ALL_GAMES = [
   { title:"SpongeBob's Atlantis SquarePantis", year:2007, genre:"Platformer", score:35 },
   { title:"Horrid Henry's Horrid Adventure", year:2011, genre:"Platformer", score:30 },
   { title:"Ride to Hell: Retribution", year:2013, genre:"Action", score:19 },
+  { title:"Angry Robot Rampage", year:2024, genre:"Action", score:null },
 ];
 
 const PRE2005_LABEL = "Before 2005";
@@ -883,8 +1114,8 @@ const HIST_BINS = [
 ];
 
 const GENRES = [...new Set(ALL_GAMES.map(g => g.genre))].sort();
-const GENRE_PALETTE      = ["#7F77DD","#D85A30","#1D9E75","#378ADD","#BA7517","#D4537E","#534AB7","#0F6E56","#639922","#5F5E5A"];
-const GENRE_FADED_PAL    = ["#CECBF6","#F5C4B3","#9FE1CB","#B5D4F4","#FAC775","#F4C0D1","#AFA9EC","#5DCAA5","#97C459","#B4B2A9"];
+const GENRE_PALETTE      = ["#5BA4CF","#D85A30","#1D9E75","#378ADD","#BA7517","#D4537E","#0E1647","#0F6E56","#639922","#5F5E5A"];
+const GENRE_FADED_PAL    = ["#C0DCF0","#F5C4B3","#9FE1CB","#B5D4F4","#FAC775","#F4C0D1","#A8C5DC","#5DCAA5","#97C459","#B4B2A9"];
 const GENRE_COLOR = {}, GENRE_FADED = {};
 GENRES.forEach((g,i) => { GENRE_COLOR[g] = GENRE_PALETTE[i%10]; GENRE_FADED[g] = GENRE_FADED_PAL[i%10]; });
 
@@ -903,7 +1134,7 @@ function getFiltered() {
   return ALL_GAMES.filter(g =>
     (activeYearBucket === null || yearMatchesBucket(g.year, activeYearBucket)) &&
     (activeGenre === null || g.genre === activeGenre) &&
-    (activeScoreBin === null || (g.score >= activeScoreBin.min && g.score <= activeScoreBin.max))
+    (activeScoreBin === null || (g.score !== null && g.score >= activeScoreBin.min && g.score <= activeScoreBin.max))
   );
 }
 
@@ -943,8 +1174,8 @@ function buildYearChart() {
       animation: { duration:400, easing:"easeInOutQuart" },
       plugins: { legend:{display:false}, tooltip:{ callbacks:{ label: ctx => " "+ctx.parsed.y+" games" } } },
       scales: {
-        x: { ticks:{ font:{size:9}, color:"#888780", maxRotation:45, autoSkip:true, maxTicksLimit:15 }, grid:{display:false} },
-        y: { ticks:{ font:{size:10}, color:"#888780" }, grid:{ color:"rgba(0,0,0,0.06)" }, beginAtZero:true }
+        x: { ticks:{ font:{size:9}, color:"#7a88a8", maxRotation:45, autoSkip:true, maxTicksLimit:15 }, grid:{display:false} },
+        y: { ticks:{ font:{size:10}, color:"#7a88a8" }, grid:{ color:"rgba(14,22,71,0.1)" }, beginAtZero:true }
       },
       onClick(evt) {
         const pts = yearChart.getElementsAtEventForMode(evt,"nearest",{intersect:true},false);
@@ -998,8 +1229,8 @@ function buildHistChart() {
       animation: { duration:400, easing:"easeInOutQuart" },
       plugins: { legend:{display:false}, tooltip:{ callbacks:{ title: ctx => "Score "+ctx[0].label, label: ctx => " "+ctx.parsed.y+" game"+(ctx.parsed.y!==1?"s":"") } } },
       scales: {
-        x: { ticks:{ font:{size:10}, color:"#888780", autoSkip:false, maxRotation:0 }, grid:{display:false} },
-        y: { ticks:{ font:{size:10}, color:"#888780" }, grid:{ color:"rgba(0,0,0,0.06)" }, beginAtZero:true }
+        x: { ticks:{ font:{size:10}, color:"#7a88a8", autoSkip:false, maxRotation:0 }, grid:{display:false} },
+        y: { ticks:{ font:{size:10}, color:"#7a88a8" }, grid:{ color:"rgba(14,22,71,0.1)" }, beginAtZero:true }
       },
       onClick(evt) {
         const pts = histChart.getElementsAtEventForMode(evt,"nearest",{intersect:true},false);
@@ -1019,7 +1250,8 @@ function update() {
   const hasY = activeYearBucket !== null, hasG = activeGenre !== null, hasS = activeScoreBin !== null;
   const hasF = hasY || hasG || hasS;
 
-  const avg = data.length ? Math.round(data.reduce((s,g) => s+g.score, 0) / data.length) : NaN;
+  const rated = data.filter(g => g.score !== null);
+  const avg = rated.length ? Math.round(rated.reduce((s,g) => s + g.score, 0) / rated.length) : NaN;
   animVal(document.getElementById("kpiGames"), data.length);
   animVal(document.getElementById("kpiRating"), avg);
   document.getElementById("kpiGamesSub").textContent = hasY ? (activeYearBucket === PRE2005_LABEL ? "before 2005" : "in "+activeYearBucket) : "across all cohorts";
@@ -1034,17 +1266,17 @@ function update() {
     ALL_GAMES.filter(g =>
       yearMatchesBucket(g.year, bucket) &&
       (hasG ? g.genre === activeGenre : true) &&
-      (hasS ? g.score >= activeScoreBin.min && g.score <= activeScoreBin.max : true)
+      (hasS ? g.score !== null && g.score >= activeScoreBin.min && g.score <= activeScoreBin.max : true)
     ).length
   );
   yearChart.data.datasets[0].data = yearCounts;
-  yearChart.data.datasets[0].backgroundColor = BAR_LABELS.map(b => (!hasY || b === activeYearBucket) ? "#CECBF6" : "rgba(175,169,236,0.2)");
-  yearChart.data.datasets[0].borderColor     = BAR_LABELS.map(b => (!hasY || b === activeYearBucket) ? "#7F77DD" : "rgba(127,119,221,0.15)");
+  yearChart.data.datasets[0].backgroundColor = BAR_LABELS.map(b => (!hasY || b === activeYearBucket) ? "#C0DCF0" : "rgba(91,164,207,0.15)");
+  yearChart.data.datasets[0].borderColor     = BAR_LABELS.map(b => (!hasY || b === activeYearBucket) ? "#5BA4CF" : "rgba(91,164,207,0.1)");
   yearChart.update();
 
   const forGenre = ALL_GAMES.filter(g =>
     (hasY ? yearMatchesBucket(g.year, activeYearBucket) : true) &&
-    (hasS ? g.score >= activeScoreBin.min && g.score <= activeScoreBin.max : true)
+    (hasS ? g.score !== null && g.score >= activeScoreBin.min && g.score <= activeScoreBin.max : true)
   );
   genreChart.data.datasets[0].data = GENRES.map(g => forGenre.filter(d => d.genre === g).length);
   genreChart.data.datasets[0].backgroundColor = GENRES.map(g => (!hasG || g === activeGenre) ? GENRE_COLOR[g] : GENRE_FADED[g]);
@@ -1054,7 +1286,7 @@ function update() {
     (hasY ? yearMatchesBucket(g.year, activeYearBucket) : true) &&
     (hasG ? g.genre === activeGenre : true)
   );
-  histChart.data.datasets[0].data = HIST_BINS.map(b => forHist.filter(g => g.score >= b.min && g.score <= b.max).length);
+  histChart.data.datasets[0].data = HIST_BINS.map(b => forHist.filter(g => g.score !== null && g.score >= b.min && g.score <= b.max).length);
   histChart.data.datasets[0].backgroundColor = HIST_BINS.map(b => {
     const col = mcColor(b.min+5);
     return (!hasS || activeScoreBin.min === b.min) ? col : col+"44";
@@ -1073,6 +1305,12 @@ function update() {
 function renderTable(data) {
   const sorted = [...data].sort((a,b) => {
     const av = a[sortKey], bv = b[sortKey];
+    if (sortKey === "score") {
+      if (av === null && bv === null) return 0;
+      if (av === null) return 1;   // nulls always sort to bottom
+      if (bv === null) return -1;
+      return (av - bv) * sortDir;
+    }
     return typeof av === "string" ? av.localeCompare(bv)*sortDir : (av-bv)*sortDir;
   });
   const total = sorted.length, totalPages = Math.max(1, Math.ceil(total/PAGE_SIZE));
@@ -1087,21 +1325,26 @@ function renderTable(data) {
 
   setTimeout(() => {
     tbody.innerHTML = pageData.map(g => {
-      const mc  = mcTC(g.score);
-      // const slug = g.title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+      const mc  = g.score !== null ? mcTC(g.score) : null;
       const slug = g.title.toLowerCase()
-            .replace(/'/g, "")              // remove apostrophes
-            .replace(/[^a-z0-9]+/g, "-")   // replace other non-alphanumerics with -
-            .replace(/^-|-$/g, "");        // trim leading/trailing -
+            .replace(/'/g, "")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "");
       const mcUrl = "https://www.metacritic.com/game/"+slug+"/";
       const gc = GENRE_COLOR[g.genre]||"#888", gf = GENRE_FADED[g.genre]||"#eee";
       const mp = g.mustPlay ? `<span class="must-play-badge"><span>★</span> Must Play</span>` : "";
+      const scoreBadge = mc
+        ? `<span class="score-badge" style="background:${mc.bg};color:${mc.text};">${g.score}</span>`
+        : `<span class="score-badge" style="background:#4a5568;color:#e2e8f0;">TBD</span>`;
+      const mcLink = mc
+        ? `<a class="mc-link" href="${mcUrl}" target="_blank" rel="noopener">View on Metacritic ↗</a>`
+        : `<span style="font-size:12px;color:var(--text-secondary);">Not yet rated</span>`;
       return `<tr style="opacity:0;transform:translateY(5px);transition:opacity 0.3s ease,transform 0.3s ease;">
         <td style="font-weight:500;color:var(--text-primary);">${g.title}${mp}</td>
         <td style="color:var(--text-secondary);">${g.year}</td>
         <td><span class="genre-tag" style="background:${gf};color:${gc};">${g.genre}</span></td>
-        <td><span class="score-badge" style="background:${mc.bg};color:${mc.text};">${g.score}</span></td>
-        <td><a class="mc-link" href="${mcUrl}" target="_blank" rel="noopener">View on Metacritic ↗</a></td>
+        <td>${scoreBadge}</td>
+        <td>${mcLink}</td>
       </tr>`;
     }).join("");
     requestAnimationFrame(() => {
@@ -1144,7 +1387,9 @@ function getPageRange(cur, total) {
   return [1,"…",cur-1,cur,cur+1,"…",total];
 }
 
+document.getElementById("statTitles").textContent = (Math.floor(ALL_GAMES.length / 10) * 10) + "+";
 buildYearChart(); buildGenreChart(); buildHistChart(); update();
 </script>
-</body>
-</html>
+
+
+</body></html>
