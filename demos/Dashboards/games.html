@@ -172,6 +172,40 @@
 
     .sort-arrow { font-size: 9px; opacity: 0.5; margin-left: 2px; }
 
+    /* ── Mobile ── */
+    @media (max-width: 600px) {
+      .hull-hero { padding: 28px 16px 20px; }
+      .hull-hero-sub { font-size: 13px; }
+
+      .hull-stats { flex-wrap: wrap; }
+      .hull-stat {
+        flex: 1 1 50%; max-width: 50%;
+        padding: 18px 10px;
+        border-right: 1px solid rgba(255,255,255,0.1);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+      .hull-stat:nth-child(even) { border-right: none; }
+      .hull-stat:nth-last-child(-n+2) { border-bottom: none; }
+
+      .kpi-grid { grid-template-columns: 1fr; gap: 8px; }
+
+      .dash { padding: 14px 12px 28px; }
+      .card { padding: 14px 12px; }
+
+      .mc-legend { gap: 4px; }
+      .mc-pill { font-size: 9px; padding: 2px 6px; }
+
+      .game-table { min-width: 480px; font-size: 12px; }
+      .col-title { width: 35%; }
+      .col-link  { width: 18%; }
+
+      .table-hdr { flex-direction: column; gap: 4px; }
+      .must-play-key { padding-top: 0; }
+
+      .site-footer { padding: 20px 16px; font-size: 11px; }
+      .site-footer a { display: block; margin: 8px auto 0; font-size: 12px; }
+    }
+
     /* Hull brand colours */
     :root {
       --hull-navy:  #0E1647;
@@ -205,6 +239,7 @@
     .hull-stats {
       background: var(--hull-navy);
       border-top: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 3px solid var(--hull-amber);
       display: flex; justify-content: center; gap: 0;
       padding: 0;
     }
