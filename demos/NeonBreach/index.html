@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEON BREACH — Sci-Fi FPS</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ============================================================= -->
+<!-- RENDER TARGET                                                 -->
+<!-- The Three.js WebGL canvas is injected here by the renderer.   -->
+<!-- ============================================================= -->
+<div id="gameContainer"></div>
+
+<!-- ============================================================= -->
+<!-- HEADS-UP DISPLAY (HUD)                                         -->
+<!-- All in-game stats overlay the 3D canvas. Hidden in menus.     -->
+<!-- ============================================================= -->
+<div id="hud" class="hidden">
+
+  <!-- Crosshair (procedural, CSS-drawn) -->
+  <div id="crosshair">
+    <span class="ch ch-top"></span>
+    <span class="ch ch-bottom"></span>
+    <span class="ch ch-left"></span>
+    <span class="ch ch-right"></span>
+    <span class="ch ch-dot"></span>
+  </div>
+
+  <!-- Hit marker (flashes when you damage an enemy) -->
+  <div id="hitMarker"></div>
+
+  <!-- Damage vignette (red flash when the player is hurt) -->
+  <div id="damageVignette"></div>
+
+  <!-- Low-health pulse overlay -->
+  <div id="lowHealthPulse"></div>
+
+  <!-- Top bar: level name + objective + enemy count -->
+  <div id="topBar">
+    <div id="levelName">RESEARCH FACILITY</div>
+    <div id="objective">Eliminate all hostiles</div>
+    <div id="enemyCountWrap">HOSTILES <span id="enemyCount">0</span></div>
+  </div>
+
+  <!-- Message log (pickups, doors, keycards, etc.) -->
+  <div id="messageLog"></div>
+
+  <!-- Interaction prompt (shown near doors/buttons) -->
+  <div id="interactPrompt" class="hidden">[E] INTERACT</div>
+
+  <!-- Bottom-left vitals: health + armour -->
+  <div id="vitals">
+    <div class="stat health">
+      <div class="statLabel">HEALTH</div>
+      <div class="barOuter"><div id="healthBar" class="barInner"></div></div>
+      <div id="healthValue" class="statValue">100</div>
+    </div>
+    <div class="stat armor">
+      <div class="statLabel">ARMOUR</div>
+      <div class="barOuter"><div id="armorBar" class="barInner"></div></div>
+      <div id="armorValue" class="statValue">0</div>
+    </div>
+  </div>
+
+  <!-- Bottom-right weapon + ammo -->
+  <div id="weaponBox">
+    <div id="weaponName">PULSE PISTOL</div>
+    <div id="ammoLine"><span id="ammoValue">∞</span><span id="ammoType"></span></div>
+    <div id="weaponSlots">
+      <span class="slot active" data-slot="1">1</span>
+      <span class="slot" data-slot="2">2</span>
+      <span class="slot" data-slot="3">3</span>
+    </div>
+  </div>
+
+  <!-- Keycard inventory -->
+  <div id="keycards">
+    <span class="kc kc-red"    data-have="0">RED</span>
+    <span class="kc kc-blue"   data-have="0">BLUE</span>
+    <span class="kc kc-yellow" data-have="0">YELLOW</span>
+  </div>
+
+</div>
+
+<!-- ============================================================= -->
+<!-- MENU / SCREEN SYSTEM                                           -->
+<!-- ============================================================= -->
+
+<!-- Animated starfield background shared by menus -->
+<canvas id="menuFx"></canvas>
+
+<!-- START SCREEN -->
+<div id="startScreen" class="screen">
+  <div class="panel">
+    <h1 class="gameTitle">NEON<span>BREACH</span></h1>
+    <p class="subtitle">// A COLOURFUL SCI-FI FIREFIGHT //</p>
+    <div class="menuButtons">
+      <button class="btn primary" data-action="start">START GAME</button>
+      <button class="btn" data-action="settings">SETTINGS</button>
+      <button class="btn" data-action="controls">CONTROLS</button>
+      <button class="btn" data-action="credits">CREDITS</button>
+    </div>
+    <p class="hint">Tip: click the screen to lock the mouse. Press ESC to pause.</p>
+  </div>
+</div>
+
+<!-- CONTROLS SCREEN -->
+<div id="controlsScreen" class="screen hidden">
+  <div class="panel">
+    <h2>CONTROLS</h2>
+    <div class="controlsGrid">
+      <span class="key">W A S D</span><span>Move</span>
+      <span class="key">MOUSE</span><span>Look</span>
+      <span class="key">LEFT CLICK</span><span>Fire</span>
+      <span class="key">SHIFT</span><span>Sprint</span>
+      <span class="key">SPACE</span><span>Jump</span>
+      <span class="key">1 2 3</span><span>Switch weapon (Pistol / Rifle / Rocket)</span>
+      <span class="key">E</span><span>Interact (doors &amp; buttons)</span>
+      <span class="key">ESC</span><span>Pause</span>
+    </div>
+    <div class="menuButtons">
+      <button class="btn" data-action="back">BACK</button>
+    </div>
+  </div>
+</div>
+
+<!-- CREDITS SCREEN -->
+<div id="creditsScreen" class="screen hidden">
+  <div class="panel">
+    <h2>CREDITS</h2>
+    <div class="credits">
+      <p><b>Design, Code &amp; Everything</b><br>Generated procedurally — no external assets.</p>
+      <p><b>Engine</b><br>Three.js (WebGL)</p>
+      <p><b>Audio</b><br>Synthesized live with the Web Audio API.</p>
+      <p><b>Geometry, Textures, FX</b><br>Built at runtime in code.</p>
+    </div>
+    <div class="menuButtons">
+      <button class="btn" data-action="back">BACK</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS SCREEN (shared by main menu and pause) -->
+<div id="settingsScreen" class="screen hidden">
+  <div class="panel">
+    <h2>SETTINGS</h2>
+    <div class="settingsGrid">
+      <label>Master Volume</label>
+      <input type="range" id="setMaster" min="0" max="100" value="80">
+      <span class="sv" id="setMasterVal">80</span>
+
+      <label>Music Volume</label>
+      <input type="range" id="setMusic" min="0" max="100" value="55">
+      <span class="sv" id="setMusicVal">55</span>
+
+      <label>SFX Volume</label>
+      <input type="range" id="setSfx" min="0" max="100" value="90">
+      <span class="sv" id="setSfxVal">90</span>
+
+      <label>Mouse Sensitivity</label>
+      <input type="range" id="setSens" min="10" max="300" value="100">
+      <span class="sv" id="setSensVal">1.00</span>
+
+      <label>Graphics Quality</label>
+      <select id="setQuality">
+        <option value="low">Low</option>
+        <option value="medium" selected>Medium</option>
+        <option value="high">High</option>
+      </select>
+      <span class="sv"></span>
+    </div>
+    <div class="menuButtons">
+      <button class="btn" data-action="settingsBack">BACK</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAUSE SCREEN -->
+<div id="pauseScreen" class="screen hidden">
+  <div class="panel">
+    <h2>PAUSED</h2>
+    <div class="menuButtons">
+      <button class="btn primary" data-action="resume">RESUME</button>
+      <button class="btn" data-action="restart">RESTART LEVEL</button>
+      <button class="btn" data-action="settingsFromPause">SETTINGS</button>
+      <button class="btn" data-action="toMenu">MAIN MENU</button>
+    </div>
+  </div>
+</div>
+
+<!-- LEVEL COMPLETE SCREEN -->
+<div id="levelcompleteScreen" class="screen hidden">
+  <div class="panel">
+    <h2 class="good">SECTOR CLEARED</h2>
+    <div id="levelStats" class="statsBlock"></div>
+    <div class="menuButtons">
+      <button class="btn primary" data-action="continue">CONTINUE</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME OVER SCREEN -->
+<div id="gameoverScreen" class="screen hidden">
+  <div class="panel">
+    <h2 class="bad">YOU DIED</h2>
+    <div id="gameoverStats" class="statsBlock"></div>
+    <div class="menuButtons">
+      <button class="btn primary" data-action="retry">RETRY LEVEL</button>
+      <button class="btn" data-action="toMenu">MAIN MENU</button>
+    </div>
+  </div>
+</div>
+
+<!-- VICTORY SCREEN -->
+<div id="victoryScreen" class="screen hidden">
+  <div class="panel">
+    <h2 class="good">MISSION COMPLETE</h2>
+    <p class="subtitle">// THE REACTOR IS SECURE //</p>
+    <div id="victoryStats" class="statsBlock"></div>
+    <div class="menuButtons">
+      <button class="btn primary" data-action="playAgain">PLAY AGAIN</button>
+      <button class="btn" data-action="toMenu">MAIN MENU</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loadingScreen" class="screen hidden">
+  <div class="panel">
+    <h2 id="loadingTitle">ENTERING SECTOR…</h2>
+    <div class="loaderBar"><div class="loaderFill"></div></div>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- DEPENDENCIES                                                   -->
+<!-- Three.js classic (global THREE) build from CDN. Classic        -->
+<!-- scripts load fine from file:// — no module/CORS issues.        -->
+<!-- ============================================================= -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- ============================================================= -->
+<!-- GAME MODULES (load order matters — classic scripts share the   -->
+<!-- global lexical scope, so each file's classes/consts are        -->
+<!-- visible to the ones that follow).                              -->
+<!-- ============================================================= -->
+<script src="js/utils.js"></script>       <!-- config, math, procedural textures -->
+<script src="js/audio.js"></script>       <!-- Web Audio synthesis + music -->
+<script src="js/effects.js"></script>     <!-- particles, explosions, tracers -->
+<script src="js/projectiles.js"></script> <!-- projectile physics -->
+<script src="js/pickups.js"></script>     <!-- power-ups + keycards -->
+<script src="js/doors.js"></script>       <!-- doors + buttons -->
+<script src="js/weapons.js"></script>     <!-- weapon definitions + viewmodels -->
+<script src="js/enemies.js"></script>     <!-- enemy AI -->
+<script src="js/player.js"></script>      <!-- player controller -->
+<script src="js/levels.js"></script>      <!-- level builders -->
+<script src="js/hud.js"></script>         <!-- HUD + menu wiring -->
+<script src="js/game.js"></script>        <!-- orchestration + main loop -->
+
+</body>
+</html>
